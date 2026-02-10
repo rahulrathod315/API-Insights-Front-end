@@ -1,157 +1,230 @@
-import { useState } from 'react'
-import { Download } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Activity, AlertTriangle, Layers, Percent } from 'lucide-react'
+import { differenceInCalendarDays, isValid, parseISO } from 'date-fns'
 import { PageHeader } from '@/components/shared/page-header'
-import { useProjectContext } from '@/features/projects/project-context'
-import { OverviewStats } from '../components/overview-stats'
-import { RequestVolumeChart } from '../components/request-volume-chart'
-import { ErrorRateChart } from '../components/error-rate-chart'
-import { ResponseTimeChart } from '../components/response-time-chart'
-import { StatusBreakdown } from '../components/status-breakdown'
-import { TopEndpointsTable } from '../components/top-endpoints-table'
-import { SlowEndpointsTable } from '../components/slow-endpoints-table'
-import { ErrorClusters } from '../components/error-clusters'
-import { PeriodComparison } from '../components/period-comparison'
+import { StatCard } from '@/components/shared/stat-card'
+import { DataTable } from '@/components/shared/data-table'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TimeRangePicker } from '../components/time-range-picker'
-import {
-  useSummary,
-  useTimeSeries,
-  useRequestsPerEndpoint,
-  useSlowEndpoints,
-  useErrorClusters,
-  useComparison,
-} from '../hooks'
-import { exportData } from '../api'
-import type { AnalyticsParams, ComparisonParams, ExportParams } from '../types'
+import { useDashboard } from '../hooks'
+import { formatDate, formatNumber, formatPercent } from '@/lib/utils/format'
+import type { AnalyticsParams, DashboardData } from '../types'
+import type { Column } from '@/components/shared/data-table'
 
-export default function DashboardPage() {
-  const { project } = useProjectContext()
-  const [params, setParams] = useState<AnalyticsParams>({ days: 7 })
-  const [isExporting, setIsExporting] = useState(false)
-
-  // Comparison params are optional; set to undefined to disable the query
-  const [comparisonParams] = useState<ComparisonParams | undefined>(undefined)
-
-  const summary = useSummary(String(project.id), params)
-  const timeSeries = useTimeSeries(String(project.id), params)
-  const endpoints = useRequestsPerEndpoint(String(project.id), params)
-  const slowEndpoints = useSlowEndpoints(String(project.id), params)
-  const errorClusters = useErrorClusters(String(project.id), params)
-  const comparison = useComparison(String(project.id), comparisonParams)
-
-  async function handleExport() {
-    setIsExporting(true)
-    try {
-      const exportParams: ExportParams = {
-        format: 'csv',
-        start_date: params.start_date,
-        end_date: params.end_date,
-      }
-      const blob = await exportData(String(project.id), exportParams)
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `analytics-${project.id}-${Date.now()}.csv`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-    } finally {
-      setIsExporting(false)
+function normalizeDashboardParams(params: AnalyticsParams): AnalyticsParams {
+  if (params.start_date && params.end_date) {
+    const start = parseISO(params.start_date)
+    const end = parseISO(params.end_date)
+    if (isValid(start) && isValid(end)) {
+      const diff = Math.max(1, differenceInCalendarDays(end, start) + 1)
+      return { days: Math.min(diff, 90) }
     }
   }
+  return params
+}
 
-  const defaultSummary = {
-    project: { id: 0, name: '' },
-    period: { days: 7, start_date: '', end_date: '' },
-    summary: {
-      total_requests: 0,
-      successful_requests: 0,
-      error_requests: 0,
-      success_rate: 0,
-      avg_response_time_ms: 0,
-    },
-    status_breakdown: {},
-    top_endpoints: [],
-    daily_trend: [],
+type ProjectRow = DashboardData['projects'][number]
+
+export default function DashboardPage() {
+  const [params, setParams] = useState<AnalyticsParams>({ days: 7 })
+  const normalizedParams = normalizeDashboardParams(params)
+
+  const dashboard = useDashboard(normalizedParams)
+
+  const totals = dashboard.data?.totals ?? {
+    projects: 0,
+    total_requests: 0,
+    total_errors: 0,
+    error_rate: 0,
   }
+
+  const projects = dashboard.data?.projects ?? []
+
+  const period = dashboard.data?.period
+  const periodLabel = period?.start_date && period?.end_date
+    ? `${formatDate(period.start_date)} - ${formatDate(period.end_date)}`
+    : undefined
+
+  const topActiveProjects = useMemo(() => (
+    [...projects].sort((a, b) => b.request_count - a.request_count).slice(0, 5)
+  ), [projects])
+
+  const riskiestProjects = useMemo(() => (
+    [...projects]
+      .filter((project) => project.request_count > 0)
+      .map((project) => ({
+        ...project,
+        error_rate: (project.error_count / project.request_count) * 100,
+      }))
+      .sort((a, b) => b.error_rate - a.error_rate)
+      .slice(0, 5)
+  ), [projects])
+
+  const columns = useMemo<Column<ProjectRow>[]>(
+    () => [
+      {
+        header: 'Project',
+        accessor: 'name',
+        cell: (row) => (
+          <Link
+            to={`/projects/${row.id}/analytics`}
+            className="font-medium text-primary hover:underline"
+          >
+            {row.name}
+          </Link>
+        ),
+      },
+      {
+        header: 'Endpoints',
+        accessor: 'endpoint_count',
+        cell: (row) => (
+          <span className="tabular-nums">{formatNumber(row.endpoint_count)}</span>
+        ),
+        className: 'text-right w-[120px]',
+      },
+      {
+        header: 'Requests',
+        accessor: 'request_count',
+        cell: (row) => (
+          <span className="tabular-nums">{formatNumber(row.request_count)}</span>
+        ),
+        className: 'text-right w-[140px]',
+      },
+      {
+        header: 'Errors',
+        accessor: 'error_count',
+        cell: (row) => (
+          <span className="tabular-nums">{formatNumber(row.error_count)}</span>
+        ),
+        className: 'text-right w-[120px]',
+      },
+      {
+        header: 'Error Rate',
+        accessor: 'error_count',
+        cell: (row) => {
+          const rate = row.request_count > 0
+            ? (row.error_count / row.request_count) * 100
+            : 0
+          return (
+            <span className="tabular-nums">
+              {formatPercent(rate)}
+            </span>
+          )
+        },
+        className: 'text-right w-[140px]',
+      },
+    ],
+    []
+  )
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Dashboard"
-        description="Monitor your API performance and health metrics"
-        actions={
-          <div className="flex items-center gap-3">
-            <TimeRangePicker value={params} onChange={setParams} />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExport}
-              disabled={isExporting}
-            >
-              <Download className="mr-1.5 h-3.5 w-3.5" />
-              {isExporting ? 'Exporting...' : 'Export'}
-            </Button>
-          </div>
-        }
+        description="A quick, cross-project pulse of traffic and stability"
+        actions={<TimeRangePicker value={params} onChange={setParams} />}
       />
 
-      {/* Overview Stats */}
-      <OverviewStats
-        data={summary.data ?? defaultSummary}
-        isLoading={summary.isLoading}
-      />
-
-      {/* Request Volume + Error Rate */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <RequestVolumeChart
-          data={timeSeries.data?.data ?? []}
-          isLoading={timeSeries.isLoading}
-        />
-        <ErrorRateChart
-          data={timeSeries.data?.data ?? []}
-          isLoading={timeSeries.isLoading}
-        />
-      </div>
-
-      {/* Response Time + Status Breakdown */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <ResponseTimeChart
-          data={timeSeries.data?.data ?? []}
-          isLoading={timeSeries.isLoading}
-        />
-        <StatusBreakdown
-          data={summary.data?.status_breakdown ?? {}}
-          isLoading={summary.isLoading}
-        />
-      </div>
-
-      {/* Top Endpoints */}
-      <TopEndpointsTable
-        data={endpoints.data?.endpoints ?? []}
-        isLoading={endpoints.isLoading}
-      />
-
-      {/* Slow Endpoints + Error Clusters */}
-      <div className="grid gap-6 md:grid-cols-2">
-        <SlowEndpointsTable
-          data={slowEndpoints.data?.slow_endpoints ?? []}
-          isLoading={slowEndpoints.isLoading}
-        />
-        <ErrorClusters
-          data={errorClusters.data}
-          isLoading={errorClusters.isLoading}
-        />
-      </div>
-
-      {/* Period Comparison */}
-      {comparison.data && (
-        <PeriodComparison
-          data={comparison.data}
-          isLoading={comparison.isLoading}
-        />
+      {periodLabel && (
+        <p className="text-sm text-muted-foreground">
+          Reporting window: {periodLabel}
+        </p>
       )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="Projects Tracked"
+          value={formatNumber(totals.projects)}
+          icon={Layers}
+        />
+        <StatCard
+          title="Total Requests"
+          value={formatNumber(totals.total_requests)}
+          icon={Activity}
+        />
+        <StatCard
+          title="Total Errors"
+          value={formatNumber(totals.total_errors)}
+          icon={AlertTriangle}
+        />
+        <StatCard
+          title="Error Rate"
+          value={formatPercent(totals.error_rate)}
+          icon={Percent}
+        />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">
+              Top Active Projects
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {topActiveProjects.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No project activity yet.</p>
+            ) : (
+              topActiveProjects.map((project) => (
+                <div key={project.id} className="flex items-center justify-between gap-4">
+                  <Link
+                    to={`/projects/${project.id}/analytics`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {project.name}
+                  </Link>
+                  <span className="text-sm tabular-nums text-muted-foreground">
+                    {formatNumber(project.request_count)} requests
+                  </span>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base font-semibold">
+              Riskiest Projects
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {riskiestProjects.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No error data yet.</p>
+            ) : (
+              riskiestProjects.map((project) => (
+                <div key={project.id} className="flex items-center justify-between gap-4">
+                  <Link
+                    to={`/projects/${project.id}/analytics`}
+                    className="font-medium text-primary hover:underline"
+                  >
+                    {project.name}
+                  </Link>
+                  <span className="text-sm tabular-nums text-muted-foreground">
+                    {formatPercent(project.error_rate)}
+                  </span>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base font-semibold">
+            Project Activity
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataTable
+            columns={columns}
+            data={dashboard.data?.projects ?? []}
+            isLoading={dashboard.isLoading}
+          />
+        </CardContent>
+      </Card>
     </div>
   )
 }

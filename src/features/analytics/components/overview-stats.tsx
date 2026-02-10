@@ -29,7 +29,11 @@ function OverviewStats({ data, isLoading }: OverviewStatsProps) {
       />
       <StatCard
         title="Error Rate"
-        value={formatPercent(100 - data.summary.success_rate)}
+        value={formatPercent(
+          data.summary.total_requests > 0
+            ? (data.summary.error_requests / data.summary.total_requests) * 100
+            : 0
+        )}
         icon={AlertTriangle}
       />
       <StatCard

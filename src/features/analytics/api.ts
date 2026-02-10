@@ -1,4 +1,6 @@
 import { apiClient } from '@/lib/api/client'
+import { tokenManager } from '@/lib/auth/token-manager'
+import type { AxiosResponse } from 'axios'
 import type {
   AnalyticsParams,
   ComparisonParams,
@@ -48,9 +50,20 @@ export async function getComparison(projectId: string, params: ComparisonParams)
   return response.data
 }
 
-export async function exportData(projectId: string, params?: ExportParams): Promise<Blob> {
-  const response = await apiClient.get<Blob>(`/api/v1/analytics/projects/${projectId}/export/`, { params, responseType: 'blob' })
-  return response.data
+export async function exportData(
+  projectId: string,
+  params?: ExportParams
+): Promise<AxiosResponse<Blob>> {
+  const token = tokenManager.getAccessToken()
+  const response = await apiClient.get<Blob>(
+    `/api/v1/analytics/projects/${projectId}/export/`,
+    {
+      params,
+      responseType: 'blob',
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    }
+  )
+  return response
 }
 
 export async function getEndpointMetrics(projectId: string, endpointId: string, params?: AnalyticsParams): Promise<EndpointMetrics> {

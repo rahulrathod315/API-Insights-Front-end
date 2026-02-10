@@ -54,7 +54,7 @@ function getNavItems(projectId: string): NavItem[] {
     {
       label: 'Analytics',
       icon: <BarChart3 className="h-5 w-5" />,
-      path: `/projects/${projectId}/dashboard`,
+      path: `/projects/${projectId}/analytics`,
     },
     {
       label: 'Alerts',

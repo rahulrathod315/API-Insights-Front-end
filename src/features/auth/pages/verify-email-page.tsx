@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import * as authApi from '../api'
 import {
   Card,
@@ -13,7 +13,10 @@ import { cn } from '@/lib/utils/cn'
 import { isAxiosError } from 'axios'
 
 export default function VerifyEmailPage() {
-  const { token = '' } = useParams<{ token: string }>()
+  const { token: paramToken = '' } = useParams<{ token: string }>()
+  const [searchParams] = useSearchParams()
+  const queryToken = searchParams.get('token') ?? ''
+  const token = paramToken || queryToken
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 

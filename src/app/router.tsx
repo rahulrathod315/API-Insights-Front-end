@@ -14,6 +14,7 @@ const ProjectsPage = lazy(() => import('@/features/projects/pages/projects-page'
 const ProjectSettingsPage = lazy(() => import('@/features/projects/pages/project-settings-page'))
 
 const DashboardPage = lazy(() => import('@/features/analytics/pages/dashboard-page'))
+const AnalyticsPage = lazy(() => import('@/features/analytics/pages/analytics-page'))
 const EndpointAnalyticsPage = lazy(() => import('@/features/analytics/pages/endpoint-analytics-page'))
 
 const EndpointsPage = lazy(() => import('@/features/endpoints/pages/endpoints-page'))
@@ -50,6 +51,7 @@ export function AppRouter() {
         <Route path="/two-factor" element={<TwoFactorPage />} />
         <Route path="/forgot-password" element={<PublicRoute><ForgotPasswordPage /></PublicRoute>} />
         <Route path="/reset-password/:token" element={<PublicRoute><ResetPasswordPage /></PublicRoute>} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
 
         {/* Protected routes */}
@@ -92,6 +94,7 @@ export function AppRouter() {
         >
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
+          <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="endpoints" element={<EndpointsPage />} />
           <Route path="analytics/endpoints/:endpointId" element={<EndpointAnalyticsPage />} />
           <Route path="alerts" element={<AlertsPage />} />

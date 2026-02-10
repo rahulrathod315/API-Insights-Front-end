@@ -82,6 +82,13 @@ export async function getSecurityEvents(): Promise<SecurityEvents> {
   return response.data
 }
 
+export async function resendVerificationEmail(): Promise<{ message: string }> {
+  const response = await apiClient.post<{ message: string }>(
+    '/api/v1/auth/verify-email/resend/'
+  )
+  return response.data
+}
+
 export async function deactivateAccount(): Promise<void> {
   await apiClient.post('/api/v1/auth/account/deactivate/')
 }

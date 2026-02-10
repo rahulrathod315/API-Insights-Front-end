@@ -7,6 +7,7 @@ import { Copy, RefreshCw, Loader2, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   AlertDialog,
@@ -20,11 +21,13 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { useUpdateProject, useRegenerateKey, useDeleteProject } from '../hooks'
+import { formatDate, formatNumber } from '@/lib/utils/format'
 import type { ProjectDetail } from '../types'
 
 const updateProjectSchema = z.object({
   name: z.string().min(1, 'Project name is required').max(100, 'Name must be 100 characters or less'),
   description: z.string().max(500, 'Description must be 500 characters or less').optional(),
+  is_active: z.boolean(),
 })
 
 type UpdateProjectFormValues = z.infer<typeof updateProjectSchema>
@@ -43,14 +46,19 @@ function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isDirty },
   } = useForm<UpdateProjectFormValues>({
     resolver: zodResolver(updateProjectSchema),
     defaultValues: {
       name: project.name,
       description: project.description || '',
+      is_active: project.is_active,
     },
   })
+
+  const isActive = watch('is_active')
 
   function onSubmit(values: UpdateProjectFormValues) {
     updateProject.mutate({
@@ -58,6 +66,7 @@ function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
       data: {
         name: values.name,
         description: values.description || undefined,
+        is_active: values.is_active,
       },
     })
   }
@@ -82,6 +91,31 @@ function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Project Overview</CardTitle>
+          <CardDescription>Key project metadata and status.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-1">
+            <p className="text-xs uppercase text-muted-foreground">Created</p>
+            <p className="text-sm font-medium">{formatDate(project.created_at)}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs uppercase text-muted-foreground">Last Updated</p>
+            <p className="text-sm font-medium">{formatDate(project.updated_at)}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs uppercase text-muted-foreground">Endpoints</p>
+            <p className="text-sm font-medium">{formatNumber(project.endpoints_count)}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs uppercase text-muted-foreground">Total Requests</p>
+            <p className="text-sm font-medium">{formatNumber(project.total_requests)}</p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* General Settings */}
       <Card>
         <CardHeader>
@@ -90,6 +124,7 @@ function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <input type="hidden" {...register('is_active')} />
             <div className="space-y-2">
               <Label htmlFor="settings-name">Name</Label>
               <Input id="settings-name" {...register('name')} />
@@ -103,6 +138,23 @@ function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
               {errors.description && (
                 <p className="text-sm text-destructive">{errors.description.message}</p>
               )}
+            </div>
+            <div className="flex items-center justify-between rounded-lg border p-4">
+              <div>
+                <Label htmlFor="settings-active" className="text-sm font-medium">
+                  Project Active
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Pause tracking without deleting the project.
+                </p>
+              </div>
+              <Switch
+                id="settings-active"
+                checked={isActive}
+                onCheckedChange={(checked) =>
+                  setValue('is_active', checked, { shouldDirty: true })
+                }
+              />
             </div>
             {updateProject.isError && (
               <p className="text-sm text-destructive">

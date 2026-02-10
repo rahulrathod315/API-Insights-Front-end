@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { formatDateTime } from '@/lib/utils/format'
-import { getSecurityEvents } from '../api'
+import { getSecurityEvents, resendVerificationEmail } from '../api'
 import type { SecurityEvents as SecurityEventsType } from '../types'
+import { isAxiosError } from 'axios'
 
 export function SecurityEvents() {
   const [data, setData] = useState<SecurityEventsType | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [resendStatus, setResendStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [resendMessage, setResendMessage] = useState<string | null>(null)
 
   useEffect(() => {
     getSecurityEvents().then((result: SecurityEventsType) => {
@@ -15,6 +19,27 @@ export function SecurityEvents() {
       setIsLoading(false)
     }).catch(() => setIsLoading(false))
   }, [])
+
+  async function handleResendVerification() {
+    setResendStatus('loading')
+    setResendMessage(null)
+    try {
+      const result = await resendVerificationEmail()
+      setResendStatus('success')
+      setResendMessage(result.message || 'Verification email sent.')
+    } catch (error: unknown) {
+      setResendStatus('error')
+      if (isAxiosError(error)) {
+        const message =
+          error.response?.data?.detail ??
+          error.response?.data?.message ??
+          'Unable to resend verification email. Please try again.'
+        setResendMessage(message)
+      } else {
+        setResendMessage('Unable to resend verification email. Please try again.')
+      }
+    }
+  }
 
   return (
     <Card>
@@ -59,6 +84,27 @@ export function SecurityEvents() {
                     </span>
                   )}
                 </div>
+                {!data.is_email_verified && (
+                  <div className="mt-2 space-y-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleResendVerification}
+                      disabled={resendStatus === 'loading'}
+                    >
+                      {resendStatus === 'loading'
+                        ? 'Sending...'
+                        : 'Resend Verification Email'}
+                    </Button>
+                    {resendMessage && (
+                      <p
+                        className={`text-xs ${resendStatus === 'error' ? 'text-destructive' : 'text-muted-foreground'}`}
+                      >
+                        {resendMessage}
+                      </p>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="rounded-lg border p-4 space-y-1">
