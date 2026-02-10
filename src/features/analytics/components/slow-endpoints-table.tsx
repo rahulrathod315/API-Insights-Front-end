@@ -1,0 +1,119 @@
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { DataTable } from '@/components/shared/data-table'
+import { formatMs, formatNumber, formatPercent } from '@/lib/utils/format'
+import { cn } from '@/lib/utils/cn'
+import type { Column } from '@/components/shared/data-table'
+import type { SlowEndpoint } from '../types'
+
+interface SlowEndpointsTableProps {
+  data: SlowEndpoint[]
+  isLoading: boolean
+}
+
+const METHOD_COLORS: Record<string, string> = {
+  GET: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+  POST: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+  PUT: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+  PATCH: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+  DELETE: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+}
+
+function getResponseTimeClass(ms: number): string {
+  if (ms < 200) return 'text-success'
+  if (ms < 500) return 'text-warning'
+  return 'text-destructive'
+}
+
+const columns: Column<SlowEndpoint>[] = [
+  {
+    header: 'Method',
+    accessor: 'method',
+    cell: (row) => (
+      <Badge
+        variant="outline"
+        className={cn(
+          'font-mono text-xs',
+          METHOD_COLORS[row.method] ?? ''
+        )}
+      >
+        {row.method}
+      </Badge>
+    ),
+    className: 'w-[80px]',
+  },
+  {
+    header: 'Path',
+    accessor: 'path',
+    cell: (row) => (
+      <span className="font-mono text-sm">{row.path}</span>
+    ),
+  },
+  {
+    header: 'Avg (ms)',
+    accessor: 'avg_response_time_ms',
+    cell: (row) => (
+      <span
+        className={cn(
+          'tabular-nums font-medium',
+          getResponseTimeClass(row.avg_response_time_ms)
+        )}
+      >
+        {formatMs(row.avg_response_time_ms)}
+      </span>
+    ),
+    className: 'text-right w-[100px]',
+  },
+  {
+    header: 'Slow %',
+    accessor: 'slow_percent',
+    cell: (row) => (
+      <span
+        className={cn(
+          'tabular-nums font-medium',
+          row.slow_percent > 50 && 'text-destructive'
+        )}
+      >
+        {formatPercent(row.slow_percent)}
+      </span>
+    ),
+    className: 'text-right w-[100px]',
+  },
+  {
+    header: 'Slow / Total',
+    accessor: 'request_count',
+    cell: (row) => (
+      <span className="tabular-nums">
+        {formatNumber(row.slow_request_count)} / {formatNumber(row.request_count)}
+      </span>
+    ),
+    className: 'text-right w-[120px]',
+  },
+]
+
+function SlowEndpointsTable({ data, isLoading }: SlowEndpointsTableProps) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base font-semibold">
+          Slow Endpoints
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <DataTable
+          columns={columns}
+          data={data}
+          isLoading={isLoading}
+        />
+      </CardContent>
+    </Card>
+  )
+}
+
+export { SlowEndpointsTable }
+export type { SlowEndpointsTableProps }
