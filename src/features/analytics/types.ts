@@ -111,6 +111,13 @@ export interface ErrorClustersResponse {
   common_error_messages: Array<{ error_message: string; count: number }>
 }
 
+export interface UserAgentBreakdownResponse {
+  project: { id: number; name: string }
+  period: { days: number; start_date: string; end_date: string }
+  total_requests: number
+  user_agents: Array<{ name: string; count: number }>
+}
+
 export interface ComparisonData {
   project: { id: number; name: string }
   current_period: {

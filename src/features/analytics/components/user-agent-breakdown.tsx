@@ -15,44 +15,33 @@ import {
 import { ChartSkeleton } from '@/components/shared/loading-skeleton'
 import { formatNumber, formatPercent } from '@/lib/utils/format'
 
-interface StatusBreakdownProps {
-  data: Record<string, number>
+interface UserAgentBreakdownProps {
+  data: Array<{ name: string; count: number }>
   isLoading: boolean
 }
 
-function getStatusColor(category: string): string {
-  if (category === '2xx') return 'var(--chart-2)'
-  if (category === '3xx') return 'var(--chart-1)'
-  if (category === '4xx') return 'var(--chart-3)'
-  if (category === '5xx') return 'var(--chart-4)'
-  return 'var(--chart-5)'
-}
+const chartColors = [
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+]
 
-function getStatusLabel(category: string): string {
-  if (category === '2xx') return '2xx (Success)'
-  if (category === '3xx') return '3xx (Redirect)'
-  if (category === '4xx') return '4xx (Client Error)'
-  if (category === '5xx') return '5xx (Server Error)'
-  return category
-}
+function UserAgentBreakdown({ data, isLoading }: UserAgentBreakdownProps) {
+  const [hiddenKeys, setHiddenKeys] = useState<string[]>([])
 
-function StatusBreakdown({ data, isLoading }: StatusBreakdownProps) {
-  const [hiddenCategories, setHiddenCategories] = useState<string[]>([])
-
-  const entries = Object.entries(data)
-  const total = entries.reduce((sum, [, count]) => sum + count, 0)
-
-  const baseData = entries.map(([category, count]) => ({
-    category,
-    count,
-    name: getStatusLabel(category),
-    fill: getStatusColor(category),
+  const total = data.reduce((sum, item) => sum + item.count, 0)
+  const baseData = data.map((item, index) => ({
+    name: item.name,
+    count: item.count,
+    fill: chartColors[index % chartColors.length],
   }))
 
   const visibleData = useMemo(() => {
-    if (hiddenCategories.length === 0) return baseData
-    return baseData.filter((item) => !hiddenCategories.includes(item.category))
-  }, [baseData, hiddenCategories])
+    if (hiddenKeys.length === 0) return baseData
+    return baseData.filter((item) => !hiddenKeys.includes(item.name))
+  }, [baseData, hiddenKeys])
 
   const visibleTotal = visibleData.reduce((sum, item) => sum + item.count, 0)
   const chartData = visibleData.map((item) => ({
@@ -64,11 +53,11 @@ function StatusBreakdown({ data, isLoading }: StatusBreakdownProps) {
     return <ChartSkeleton />
   }
 
-  function toggleCategory(category: string) {
-    setHiddenCategories((prev) => {
-      const next = prev.includes(category)
-        ? prev.filter((item) => item !== category)
-        : [...prev, category]
+  function toggleKey(name: string) {
+    setHiddenKeys((prev) => {
+      const next = prev.includes(name)
+        ? prev.filter((item) => item !== name)
+        : [...prev, name]
       return next.length === baseData.length ? [] : next
     })
   }
@@ -78,17 +67,17 @@ function StatusBreakdown({ data, isLoading }: StatusBreakdownProps) {
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="text-base font-semibold">
-            Status Codes
+            User Agents
           </CardTitle>
           {baseData.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
               {baseData.map((item) => {
-                const isHidden = hiddenCategories.includes(item.category)
+                const isHidden = hiddenKeys.includes(item.name)
                 return (
                   <button
-                    key={item.category}
+                    key={item.name}
                     type="button"
-                    onClick={() => toggleCategory(item.category)}
+                    onClick={() => toggleKey(item.name)}
                     className={`flex items-center gap-1.5 rounded-full border px-2 py-1 transition ${
                       isHidden ? 'opacity-50' : 'border-transparent bg-muted'
                     }`}
@@ -128,7 +117,7 @@ function StatusBreakdown({ data, isLoading }: StatusBreakdownProps) {
                     <Cell
                       key={`cell-${index}`}
                       fill={entry.fill}
-                      onClick={() => toggleCategory(entry.category)}
+                      onClick={() => toggleKey(entry.name)}
                       style={{ cursor: 'pointer' }}
                     />
                   ))}
@@ -165,5 +154,5 @@ function StatusBreakdown({ data, isLoading }: StatusBreakdownProps) {
   )
 }
 
-export { StatusBreakdown }
-export type { StatusBreakdownProps }
+export { UserAgentBreakdown }
+export type { UserAgentBreakdownProps }

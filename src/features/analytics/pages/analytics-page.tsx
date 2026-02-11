@@ -9,6 +9,7 @@ import { RequestVolumeChart } from '../components/request-volume-chart'
 import { ErrorRateChart } from '../components/error-rate-chart'
 import { ResponseTimeChart } from '../components/response-time-chart'
 import { StatusBreakdown } from '../components/status-breakdown'
+import { UserAgentBreakdown } from '../components/user-agent-breakdown'
 import { TopEndpointsTable } from '../components/top-endpoints-table'
 import { SlowEndpointsTable } from '../components/slow-endpoints-table'
 import { ErrorClusters } from '../components/error-clusters'
@@ -20,6 +21,7 @@ import {
   useRequestsPerEndpoint,
   useSlowEndpoints,
   useErrorClusters,
+  useUserAgentBreakdown,
   useComparison,
 } from '../hooks'
 import { exportData } from '../api'
@@ -52,6 +54,7 @@ export default function AnalyticsPage() {
   const endpoints = useRequestsPerEndpoint(String(project.id), normalizedParams)
   const slowEndpoints = useSlowEndpoints(String(project.id), normalizedParams)
   const errorClusters = useErrorClusters(String(project.id), normalizedParams)
+  const userAgents = useUserAgentBreakdown(String(project.id), normalizedParams)
   const comparison = useComparison(String(project.id), comparisonParams)
 
   function getFilenameFromDisposition(disposition?: string) {
@@ -138,7 +141,7 @@ export default function AnalyticsPage() {
         />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         <ResponseTimeChart
           data={timeSeries.data?.data ?? []}
           isLoading={timeSeries.isLoading}
@@ -146,6 +149,10 @@ export default function AnalyticsPage() {
         <StatusBreakdown
           data={summary.data?.status_breakdown ?? {}}
           isLoading={summary.isLoading}
+        />
+        <UserAgentBreakdown
+          data={userAgents.data?.user_agents ?? []}
+          isLoading={userAgents.isLoading}
         />
       </div>
 

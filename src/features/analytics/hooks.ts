@@ -4,6 +4,7 @@ import {
   getDashboard,
   getEndpointMetrics,
   getErrorClusters,
+  getUserAgentBreakdown,
   getRequestsPerEndpoint,
   getSlowEndpoints,
   getSummary,
@@ -78,6 +79,20 @@ export function useErrorClusters(
   return useQuery({
     queryKey: ['analytics', 'error-clusters', projectId, params],
     queryFn: () => getErrorClusters(projectId, params),
+    enabled: !!projectId,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+  })
+}
+
+export function useUserAgentBreakdown(
+  projectId: string,
+  params?: AnalyticsParams
+) {
+  return useQuery({
+    queryKey: ['analytics', 'user-agents', projectId, params],
+    queryFn: () => getUserAgentBreakdown(projectId, params),
     enabled: !!projectId,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,

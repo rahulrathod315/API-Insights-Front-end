@@ -13,6 +13,7 @@ import type {
   RequestsPerEndpointResponse,
   SlowEndpointsResponse,
   TimeSeriesResponse,
+  UserAgentBreakdownResponse,
 } from './types'
 
 export async function getDashboard(params?: AnalyticsParams): Promise<DashboardData> {
@@ -42,6 +43,11 @@ export async function getSlowEndpoints(projectId: string, params?: AnalyticsPara
 
 export async function getErrorClusters(projectId: string, params?: AnalyticsParams): Promise<ErrorClustersResponse> {
   const response = await apiClient.get<ErrorClustersResponse>(`/api/v1/analytics/projects/${projectId}/error-clusters/`, { params })
+  return response.data
+}
+
+export async function getUserAgentBreakdown(projectId: string, params?: AnalyticsParams): Promise<UserAgentBreakdownResponse> {
+  const response = await apiClient.get<UserAgentBreakdownResponse>(`/api/v1/analytics/projects/${projectId}/user-agents/`, { params })
   return response.data
 }
 
