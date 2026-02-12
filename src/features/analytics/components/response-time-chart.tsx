@@ -24,8 +24,8 @@ interface ResponseTimeChartProps {
 }
 
 const series = [
-  { key: 'avg_response_time', label: 'Avg', color: 'var(--chart-1)' },
-  { key: 'p50_response_time', label: 'P50', color: 'var(--chart-5)' },
+  { key: 'avg_response_time', label: 'Avg', color: 'var(--chart-1)', dash: undefined },
+  { key: 'p50_response_time', label: 'P50', color: 'var(--chart-5)', dash: undefined },
   { key: 'p95_response_time', label: 'P95', color: 'var(--chart-2)', dash: '5 5' },
   { key: 'p99_response_time', label: 'P99', color: 'var(--chart-3)', dash: '2 2' },
 ] as const
