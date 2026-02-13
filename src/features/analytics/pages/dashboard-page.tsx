@@ -148,6 +148,7 @@ export default function DashboardPage() {
             title="Projects Tracked"
             value={formatNumber(totals.projects)}
             icon={Layers}
+            iconClassName="bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400"
           />
         </StaggerItem>
         <StaggerItem>
@@ -155,6 +156,7 @@ export default function DashboardPage() {
             title="Total Requests"
             value={formatNumber(totals.total_requests)}
             icon={Activity}
+            iconClassName="bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
           />
         </StaggerItem>
         <StaggerItem>
@@ -162,6 +164,7 @@ export default function DashboardPage() {
             title="Total Errors"
             value={formatNumber(totals.total_errors)}
             icon={AlertTriangle}
+            iconClassName="bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400"
           />
         </StaggerItem>
         <StaggerItem>
@@ -169,6 +172,7 @@ export default function DashboardPage() {
             title="Error Rate"
             value={formatPercent(totals.error_rate)}
             icon={Percent}
+            iconClassName="bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400"
           />
         </StaggerItem>
       </StaggerGroup>

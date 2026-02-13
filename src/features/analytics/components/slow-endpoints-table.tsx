@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import {
   Card,
   CardContent,
@@ -10,6 +11,8 @@ import { formatMs, formatNumber, formatPercent } from '@/lib/utils/format'
 import { cn } from '@/lib/utils/cn'
 import type { Column } from '@/components/shared/data-table'
 import type { SlowEndpoint } from '../types'
+
+const DEFAULT_PAGE_SIZE = 10
 
 interface SlowEndpointsTableProps {
   data: SlowEndpoint[]
@@ -97,6 +100,18 @@ const columns: Column<SlowEndpoint>[] = [
 ]
 
 function SlowEndpointsTable({ data, isLoading }: SlowEndpointsTableProps) {
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+
+  const paginatedData = useMemo(() => {
+    const start = (page - 1) * pageSize
+    return data.slice(start, start + pageSize)
+  }, [data, page, pageSize])
+
+  // Reset page when data changes
+  const dataLength = data.length
+  useMemo(() => { setPage(1) }, [dataLength])
+
   return (
     <Card>
       <CardHeader>
@@ -107,8 +122,16 @@ function SlowEndpointsTable({ data, isLoading }: SlowEndpointsTableProps) {
       <CardContent>
         <DataTable
           columns={columns}
-          data={data}
+          data={paginatedData}
           isLoading={isLoading}
+          pagination={
+            data.length > 0
+              ? { page, pageSize, total: data.length }
+              : undefined
+          }
+          onPageChange={setPage}
+          onPageSizeChange={(size) => { setPageSize(size); setPage(1) }}
+          rowKey={(row) => `${row.method}-${row.path}`}
         />
       </CardContent>
     </Card>

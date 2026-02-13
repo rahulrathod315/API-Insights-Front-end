@@ -9,6 +9,7 @@ interface StatCardProps {
   change?: number
   changeLabel?: string
   icon?: LucideIcon
+  iconClassName?: string
   className?: string
 }
 
@@ -18,6 +19,7 @@ function StatCard({
   change,
   changeLabel,
   icon: Icon,
+  iconClassName,
   className,
 }: StatCardProps) {
   const isPositive = change !== undefined && change >= 0
@@ -29,8 +31,8 @@ function StatCard({
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           {Icon && (
-            <div className="rounded-md bg-muted p-2">
-              <Icon className="h-4 w-4 text-muted-foreground" />
+            <div className={cn('rounded-md p-2', iconClassName ?? 'bg-muted text-muted-foreground')}>
+              <Icon className="h-4 w-4" />
             </div>
           )}
         </div>

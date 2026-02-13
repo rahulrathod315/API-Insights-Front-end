@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react'
 import {
   Card,
   CardContent,
@@ -10,6 +11,8 @@ import { formatNumber, formatMs, formatPercent } from '@/lib/utils/format'
 import { cn } from '@/lib/utils/cn'
 import type { Column } from '@/components/shared/data-table'
 import type { EndpointStats } from '../types'
+
+const DEFAULT_PAGE_SIZE = 10
 
 interface TopEndpointsTableProps {
   data: EndpointStats[]
@@ -82,9 +85,22 @@ const columns: Column<EndpointStats>[] = [
 ]
 
 function TopEndpointsTable({ data, isLoading }: TopEndpointsTableProps) {
-  const sortedData = [...data].sort(
-    (a, b) => b.total_requests - a.total_requests
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+
+  const sortedData = useMemo(
+    () => [...data].sort((a, b) => b.total_requests - a.total_requests),
+    [data]
   )
+
+  const paginatedData = useMemo(() => {
+    const start = (page - 1) * pageSize
+    return sortedData.slice(start, start + pageSize)
+  }, [sortedData, page, pageSize])
+
+  // Reset page when data changes
+  const dataLength = sortedData.length
+  useMemo(() => { setPage(1) }, [dataLength])
 
   return (
     <Card>
@@ -96,8 +112,16 @@ function TopEndpointsTable({ data, isLoading }: TopEndpointsTableProps) {
       <CardContent>
         <DataTable
           columns={columns}
-          data={sortedData}
+          data={paginatedData}
           isLoading={isLoading}
+          pagination={
+            sortedData.length > 0
+              ? { page, pageSize, total: sortedData.length }
+              : undefined
+          }
+          onPageChange={setPage}
+          onPageSizeChange={(size) => { setPageSize(size); setPage(1) }}
+          rowKey={(row) => `${row.method}-${row.path}`}
         />
       </CardContent>
     </Card>
