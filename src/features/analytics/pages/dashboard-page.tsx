@@ -4,6 +4,7 @@ import { Activity, AlertTriangle, Layers, Percent } from 'lucide-react'
 import { differenceInCalendarDays, isValid, parseISO } from 'date-fns'
 import { PageHeader } from '@/components/shared/page-header'
 import { StatCard } from '@/components/shared/stat-card'
+import { StaggerGroup, StaggerItem } from '@/components/animation'
 import { DataTable } from '@/components/shared/data-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TimeRangePicker } from '../components/time-range-picker'
@@ -132,28 +133,36 @@ export default function DashboardPage() {
         </p>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Projects Tracked"
-          value={formatNumber(totals.projects)}
-          icon={Layers}
-        />
-        <StatCard
-          title="Total Requests"
-          value={formatNumber(totals.total_requests)}
-          icon={Activity}
-        />
-        <StatCard
-          title="Total Errors"
-          value={formatNumber(totals.total_errors)}
-          icon={AlertTriangle}
-        />
-        <StatCard
-          title="Error Rate"
-          value={formatPercent(totals.error_rate)}
-          icon={Percent}
-        />
-      </div>
+      <StaggerGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StaggerItem>
+          <StatCard
+            title="Projects Tracked"
+            value={formatNumber(totals.projects)}
+            icon={Layers}
+          />
+        </StaggerItem>
+        <StaggerItem>
+          <StatCard
+            title="Total Requests"
+            value={formatNumber(totals.total_requests)}
+            icon={Activity}
+          />
+        </StaggerItem>
+        <StaggerItem>
+          <StatCard
+            title="Total Errors"
+            value={formatNumber(totals.total_errors)}
+            icon={AlertTriangle}
+          />
+        </StaggerItem>
+        <StaggerItem>
+          <StatCard
+            title="Error Rate"
+            value={formatPercent(totals.error_rate)}
+            icon={Percent}
+          />
+        </StaggerItem>
+      </StaggerGroup>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>

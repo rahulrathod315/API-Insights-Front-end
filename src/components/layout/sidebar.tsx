@@ -1,5 +1,6 @@
 import { useLocation, useParams, Link } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard,
   Globe,
@@ -137,13 +138,16 @@ export function Sidebar({
                   to={item.path}
                   onClick={onMobileClose}
                   className={cn(
-                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    'relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
                     active
                       ? 'bg-sidebar-accent text-sidebar-accent-foreground'
                       : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
                     collapsed && 'justify-center px-2'
                   )}
                 >
+                  {active && (
+                    <span className="sidebar-active-indicator absolute left-0 top-1 bottom-1 w-0.5 rounded-full bg-primary" />
+                  )}
                   <span className="shrink-0">{item.icon}</span>
                   {!collapsed && <span>{item.label}</span>}
                 </Link>
@@ -191,13 +195,19 @@ export function Sidebar({
   return (
     <>
       {/* Mobile backdrop */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 md:hidden"
-          onClick={onMobileClose}
-          aria-hidden="true"
-        />
-      )}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
+            onClick={onMobileClose}
+            aria-hidden="true"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Sidebar panel */}
       <aside

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { Suspense, lazy } from 'react'
 import { ProtectedRoute, PublicRoute } from '@/lib/auth/auth-guard'
+import { AnimateIn } from '@/components/animation'
 
 // Lazy loaded pages
 const LoginPage = lazy(() => import('@/features/auth/pages/login-page'))
@@ -35,9 +36,11 @@ const ProjectContextWrapper = lazy(() => import('@/features/projects/project-con
 
 function PageLoader() {
   return (
-    <div className="flex h-screen items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-    </div>
+    <AnimateIn variant="fadeIn" duration={0.2} delay={0.15}>
+      <div className="flex h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    </AnimateIn>
   )
 }
 

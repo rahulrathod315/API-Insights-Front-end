@@ -152,6 +152,60 @@
   --chart-5: oklch(0.75 0.2 30);
 }
 
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    oklch(0.98 0.002 285) 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.dark .animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--muted) 25%,
+    oklch(0.28 0.015 285) 50%,
+    var(--muted) 75%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes sidebar-indicator-enter {
+  from {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+.sidebar-active-indicator {
+  animation: sidebar-indicator-enter 200ms ease-out forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer {
+    animation: none;
+  }
+  .sidebar-active-indicator {
+    animation: none;
+  }
+}
+
 * {
   border-color: var(--border);
 }

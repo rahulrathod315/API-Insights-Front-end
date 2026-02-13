@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { ChartSkeleton } from '@/components/shared/loading-skeleton'
+import { useChartAnimation } from '@/lib/animation'
 import { formatNumber, formatPercent } from '@/lib/utils/format'
 
 interface UserAgentBreakdownProps {
@@ -29,6 +30,7 @@ const chartColors = [
 ]
 
 function UserAgentBreakdown({ data, isLoading }: UserAgentBreakdownProps) {
+  const chartAnimation = useChartAnimation(600)
   const [hiddenKeys, setHiddenKeys] = useState<string[]>([])
 
   const total = data.reduce((sum, item) => sum + item.count, 0)
@@ -112,6 +114,7 @@ function UserAgentBreakdown({ data, isLoading }: UserAgentBreakdownProps) {
                   paddingAngle={2}
                   dataKey="count"
                   nameKey="name"
+                  {...chartAnimation}
                 >
                   {chartData.map((entry, index) => (
                     <Cell

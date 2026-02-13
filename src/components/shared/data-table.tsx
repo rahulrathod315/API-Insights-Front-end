@@ -1,7 +1,9 @@
 import { cn } from '@/lib/utils/cn'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react'
+import { useReducedMotion } from '@/lib/animation'
 import type { ReactNode } from 'react'
 
 interface Column<T> {
@@ -24,6 +26,7 @@ interface DataTableProps<T> {
   onPageChange?: (page: number) => void
   isLoading?: boolean
   className?: string
+  rowKey?: (row: T) => string | number
 }
 
 function getNestedValue<T>(obj: T, path: string): unknown {
@@ -42,7 +45,9 @@ function DataTable<T>({
   onPageChange,
   isLoading = false,
   className,
+  rowKey,
 }: DataTableProps<T>) {
+  const prefersReducedMotion = useReducedMotion()
   const totalPages = pagination
     ? Math.ceil(pagination.total / pagination.pageSize)
     : 1
@@ -50,6 +55,8 @@ function DataTable<T>({
   const pageNumbers = pagination
     ? getPageNumbers(pagination.page, totalPages)
     : []
+
+  const shouldAnimate = rowKey && !prefersReducedMotion
 
   if (isLoading) {
     return (
@@ -137,25 +144,53 @@ function DataTable<T>({
             </tr>
           </thead>
           <tbody>
-            {data.map((row, rowIdx) => (
-              <tr
-                key={rowIdx}
-                className="border-b transition-colors hover:bg-muted/50"
-              >
-                {columns.map((col, colIdx) => (
-                  <td
-                    key={colIdx}
-                    className={cn('p-4 align-middle', col.className)}
+            {shouldAnimate ? (
+              <AnimatePresence mode="popLayout">
+                {data.map((row, rowIdx) => (
+                  <motion.tr
+                    key={rowKey(row)}
+                    className="border-b transition-all duration-150 hover:bg-muted/50 hover:shadow-sm"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, x: -8 }}
+                    transition={{ duration: 0.15 }}
                   >
-                    {col.cell
-                      ? col.cell(row, rowIdx)
-                      : String(
-                          getNestedValue(row, String(col.accessor)) ?? ''
-                        )}
-                  </td>
+                    {columns.map((col, colIdx) => (
+                      <td
+                        key={colIdx}
+                        className={cn('p-4 align-middle', col.className)}
+                      >
+                        {col.cell
+                          ? col.cell(row, rowIdx)
+                          : String(
+                              getNestedValue(row, String(col.accessor)) ?? ''
+                            )}
+                      </td>
+                    ))}
+                  </motion.tr>
                 ))}
-              </tr>
-            ))}
+              </AnimatePresence>
+            ) : (
+              data.map((row, rowIdx) => (
+                <tr
+                  key={rowKey ? rowKey(row) : rowIdx}
+                  className="border-b transition-all duration-150 hover:bg-muted/50 hover:shadow-sm"
+                >
+                  {columns.map((col, colIdx) => (
+                    <td
+                      key={colIdx}
+                      className={cn('p-4 align-middle', col.className)}
+                    >
+                      {col.cell
+                        ? col.cell(row, rowIdx)
+                        : String(
+                            getNestedValue(row, String(col.accessor)) ?? ''
+                          )}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

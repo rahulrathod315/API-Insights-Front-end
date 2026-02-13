@@ -34,7 +34,7 @@ function PageHeader({
                 )}
                 <a
                   href={crumb.href}
-                  className="transition-colors hover:text-foreground"
+                  className="relative transition-colors hover:text-foreground after:absolute after:bottom-0 after:left-0 after:h-px after:w-0 after:bg-foreground after:transition-all after:duration-200 hover:after:w-full"
                 >
                   {crumb.label}
                 </a>

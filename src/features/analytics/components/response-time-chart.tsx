@@ -15,6 +15,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { ChartSkeleton } from '@/components/shared/loading-skeleton'
+import { useChartAnimation } from '@/lib/animation'
 import { formatMs } from '@/lib/utils/format'
 import type { TimeSeriesPoint } from '../types'
 
@@ -36,6 +37,7 @@ function formatTimestamp(timestamp: string): string {
 }
 
 function ResponseTimeChart({ data, isLoading }: ResponseTimeChartProps) {
+  const chartAnimation = useChartAnimation()
   const [hiddenKeys, setHiddenKeys] = useState<string[]>([])
 
   const visibleSeries = useMemo(
@@ -151,6 +153,7 @@ function ResponseTimeChart({ data, isLoading }: ResponseTimeChartProps) {
                     dot={false}
                     strokeDasharray={item.dash}
                     activeDot={{ r: 4 }}
+                    {...chartAnimation}
                   />
                 ))}
               </LineChart>

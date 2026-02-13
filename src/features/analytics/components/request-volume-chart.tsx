@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ChartSkeleton } from '@/components/shared/loading-skeleton'
+import { useChartAnimation } from '@/lib/animation'
 import { formatNumber } from '@/lib/utils/format'
 import type { TimeSeriesPoint } from '../types'
 
@@ -36,6 +37,7 @@ function formatTimestamp(timestamp: string): string {
 }
 
 function RequestVolumeChart({ data, isLoading }: RequestVolumeChartProps) {
+  const chartAnimation = useChartAnimation()
   const [metricKey, setMetricKey] = useState<(typeof metrics)[number]['key']>(
     'request_count'
   )
@@ -141,6 +143,7 @@ function RequestVolumeChart({ data, isLoading }: RequestVolumeChartProps) {
                   fill={`url(#${gradientId})`}
                   dot={false}
                   activeDot={{ r: 4, fill: activeMetric.color }}
+                  {...chartAnimation}
                 />
               </AreaChart>
             </ResponsiveContainer>

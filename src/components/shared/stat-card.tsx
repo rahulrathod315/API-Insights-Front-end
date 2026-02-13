@@ -24,7 +24,7 @@ function StatCard({
   const isNegative = change !== undefined && change < 0
 
   return (
-    <Card className={cn('relative overflow-hidden', className)}>
+    <Card className={cn('relative overflow-hidden transition-shadow duration-200 hover:shadow-md', className)}>
       <CardContent className="p-6">
         <div className="flex items-center justify-between">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>

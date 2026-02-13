@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/shared/page-header'
 import { EmptyState } from '@/components/shared/empty-state'
@@ -85,16 +86,24 @@ export default function EndpointsPage() {
         )}
       </div>
 
-      {selectedEndpoint && (
-        <div className="w-[400px] shrink-0">
-          <EndpointDetailPanel
-            endpoint={selectedEndpoint}
-            onClose={() => setSelectedEndpoint(null)}
-            onEdit={handleEdit}
-            onDelete={handleDeleteFromPanel}
-          />
-        </div>
-      )}
+      <AnimatePresence>
+        {selectedEndpoint && (
+          <motion.div
+            className="w-[400px] shrink-0"
+            initial={{ x: 400, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 400, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0, 0, 0.2, 1] }}
+          >
+            <EndpointDetailPanel
+              endpoint={selectedEndpoint}
+              onClose={() => setSelectedEndpoint(null)}
+              onEdit={handleEdit}
+              onDelete={handleDeleteFromPanel}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <CreateEndpointDialog
         projectId={String(project.id)}

@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Copy, Activity, Globe, Calendar } from 'lucide-react'
+import { Copy, Check, Activity, Globe, Calendar } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -21,6 +22,7 @@ const roleBadgeVariant: Record<Project['my_role'], 'default' | 'secondary' | 'ou
 
 function ProjectCard({ project, className }: ProjectCardProps) {
   const navigate = useNavigate()
+  const [copied, setCopied] = useState(false)
 
   const apiKeyDisplay = project.api_key
     ? `${project.api_key.slice(0, 12)}...`
@@ -30,13 +32,15 @@ function ProjectCard({ project, className }: ProjectCardProps) {
     event.stopPropagation()
     if (project.api_key) {
       navigator.clipboard.writeText(project.api_key)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     }
   }
 
   return (
     <Card
       className={cn(
-        'cursor-pointer transition-shadow hover:shadow-md',
+        'cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5',
         className
       )}
       onClick={() => navigate(`/projects/${project.id}/dashboard`)}
@@ -67,7 +71,11 @@ function ProjectCard({ project, className }: ProjectCardProps) {
             className="ml-auto h-6 w-6 shrink-0"
             onClick={handleCopyApiKey}
           >
-            <Copy className="h-3.5 w-3.5" />
+            {copied ? (
+              <Check className="h-3.5 w-3.5 text-success" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
             <span className="sr-only">Copy API key</span>
           </Button>
         </div>

@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ChartSkeleton } from '@/components/shared/loading-skeleton'
+import { useChartAnimation } from '@/lib/animation'
 import { formatNumber, formatPercent } from '@/lib/utils/format'
 import type { TimeSeriesPoint } from '../types'
 
@@ -30,6 +31,7 @@ function formatTimestamp(timestamp: string): string {
 }
 
 function ErrorRateChart({ data, isLoading }: ErrorRateChartProps) {
+  const chartAnimation = useChartAnimation()
   const [mode, setMode] = useState<'count' | 'rate'>('count')
 
   if (isLoading) {
@@ -139,6 +141,7 @@ function ErrorRateChart({ data, isLoading }: ErrorRateChartProps) {
                   fill="url(#errorGradient)"
                   dot={false}
                   activeDot={{ r: 4, fill: 'var(--chart-4)' }}
+                  {...chartAnimation}
                 />
               </AreaChart>
             </ResponsiveContainer>

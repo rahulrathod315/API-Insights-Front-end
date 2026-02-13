@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Outlet, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils/cn'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Sidebar } from '@/components/layout/sidebar'
+import { PageTransition } from '@/components/animation'
 import { Header } from '@/components/layout/header'
 import { apiClient } from '@/lib/api/client'
 
@@ -92,7 +93,7 @@ export default function DashboardLayout() {
 
         <ScrollArea className="flex-1">
           <main className="p-4 md:p-6 lg:p-8">
-            <Outlet />
+            <PageTransition />
           </main>
         </ScrollArea>
       </div>

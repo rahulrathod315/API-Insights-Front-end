@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { ChartSkeleton } from '@/components/shared/loading-skeleton'
+import { useChartAnimation } from '@/lib/animation'
 import { formatNumber, formatPercent } from '@/lib/utils/format'
 
 interface StatusBreakdownProps {
@@ -37,6 +38,7 @@ function getStatusLabel(category: string): string {
 }
 
 function StatusBreakdown({ data, isLoading }: StatusBreakdownProps) {
+  const chartAnimation = useChartAnimation(600)
   const [hiddenCategories, setHiddenCategories] = useState<string[]>([])
 
   const entries = Object.entries(data)
@@ -123,6 +125,7 @@ function StatusBreakdown({ data, isLoading }: StatusBreakdownProps) {
                   paddingAngle={2}
                   dataKey="count"
                   nameKey="name"
+                  {...chartAnimation}
                 >
                   {chartData.map((entry, index) => (
                     <Cell
