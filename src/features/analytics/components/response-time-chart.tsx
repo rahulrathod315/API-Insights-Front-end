@@ -22,6 +22,7 @@ import type { TimeSeriesPoint } from '../types'
 interface ResponseTimeChartProps {
   data: TimeSeriesPoint[]
   isLoading: boolean
+  days?: number
 }
 
 const series = [
@@ -31,12 +32,18 @@ const series = [
   { key: 'p99_response_time', label: 'P99', color: 'var(--chart-3)', dash: '2 2' },
 ] as const
 
-function formatTimestamp(timestamp: string): string {
+function formatTimestamp(timestamp: string, days?: number): string {
   const date = new Date(timestamp)
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  if (days && days <= 1) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+  if (days && days > 30) {
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+  }
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
 }
 
-function ResponseTimeChart({ data, isLoading }: ResponseTimeChartProps) {
+function ResponseTimeChart({ data, isLoading, days }: ResponseTimeChartProps) {
   const chartAnimation = useChartAnimation()
   const [hiddenKeys, setHiddenKeys] = useState<string[]>([])
 
@@ -106,7 +113,7 @@ function ResponseTimeChart({ data, isLoading }: ResponseTimeChartProps) {
                 />
                 <XAxis
                   dataKey="timestamp"
-                  tickFormatter={formatTimestamp}
+                  tickFormatter={(ts: string) => formatTimestamp(ts, days)}
                   className="text-xs fill-muted-foreground"
                   tickLine={false}
                   axisLine={false}

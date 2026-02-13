@@ -134,10 +134,12 @@ export default function AnalyticsPage() {
         <RequestVolumeChart
           data={timeSeries.data?.data ?? []}
           isLoading={timeSeries.isLoading}
+          days={normalizedParams.days}
         />
         <ErrorRateChart
           data={timeSeries.data?.data ?? []}
           isLoading={timeSeries.isLoading}
+          days={normalizedParams.days}
         />
       </div>
 
@@ -145,6 +147,7 @@ export default function AnalyticsPage() {
         <ResponseTimeChart
           data={timeSeries.data?.data ?? []}
           isLoading={timeSeries.isLoading}
+          days={normalizedParams.days}
         />
         <StatusBreakdown
           data={summary.data?.status_breakdown ?? {}}

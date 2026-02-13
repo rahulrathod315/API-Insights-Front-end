@@ -114,6 +114,7 @@ export default function EndpointAnalyticsPage() {
       <RequestVolumeChart
         data={timeSeries.data?.data ?? []}
         isLoading={timeSeries.isLoading}
+        days={params.days}
       />
 
       {/* Status breakdown */}

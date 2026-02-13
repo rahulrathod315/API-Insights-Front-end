@@ -23,6 +23,7 @@ import type { TimeSeriesPoint } from '../types'
 interface RequestVolumeChartProps {
   data: TimeSeriesPoint[]
   isLoading: boolean
+  days?: number
 }
 
 const metrics = [
@@ -31,12 +32,18 @@ const metrics = [
   { key: 'error_count', label: 'Errors', color: 'var(--chart-4)' },
 ] as const
 
-function formatTimestamp(timestamp: string): string {
+function formatTimestamp(timestamp: string, days?: number): string {
   const date = new Date(timestamp)
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  if (days && days <= 1) {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+  if (days && days > 30) {
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+  }
+  return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
 }
 
-function RequestVolumeChart({ data, isLoading }: RequestVolumeChartProps) {
+function RequestVolumeChart({ data, isLoading, days }: RequestVolumeChartProps) {
   const chartAnimation = useChartAnimation()
   const [metricKey, setMetricKey] = useState<(typeof metrics)[number]['key']>(
     'request_count'
@@ -105,7 +112,7 @@ function RequestVolumeChart({ data, isLoading }: RequestVolumeChartProps) {
                 />
                 <XAxis
                   dataKey="timestamp"
-                  tickFormatter={formatTimestamp}
+                  tickFormatter={(ts: string) => formatTimestamp(ts, days)}
                   className="text-xs fill-muted-foreground"
                   tickLine={false}
                   axisLine={false}
