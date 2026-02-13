@@ -39,6 +39,12 @@ function normalizeAnalyticsParams(params: AnalyticsParams): AnalyticsParams {
   return params
 }
 
+function getGranularity(days?: number): 'hour' | 'day' | 'week' | 'month' {
+  if (!days || days <= 1) return 'hour'
+  if (days <= 90) return 'day'
+  return 'week'
+}
+
 export default function AnalyticsPage() {
   const { project } = useProjectContext()
   const [params, setParams] = useState<AnalyticsParams>({ days: 7 })
@@ -50,7 +56,8 @@ export default function AnalyticsPage() {
   const [comparisonParams] = useState<ComparisonParams | undefined>(undefined)
 
   const summary = useSummary(String(project.id), normalizedParams)
-  const timeSeries = useTimeSeries(String(project.id), normalizedParams)
+  const timeSeriesParams = { ...normalizedParams, granularity: getGranularity(normalizedParams.days) }
+  const timeSeries = useTimeSeries(String(project.id), timeSeriesParams)
   const endpoints = useRequestsPerEndpoint(String(project.id), normalizedParams)
   const slowEndpoints = useSlowEndpoints(String(project.id), normalizedParams)
   const errorClusters = useErrorClusters(String(project.id), normalizedParams)

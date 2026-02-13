@@ -24,8 +24,12 @@ export default function EndpointAnalyticsPage() {
     params
   )
 
+  const granularity = (!params.days || params.days <= 1) ? 'hour' as const
+    : params.days <= 90 ? 'day' as const
+    : 'week' as const
   const timeSeries = useTimeSeries(String(project.id), {
     ...params,
+    granularity,
     endpoint_id: endpointId ? Number(endpointId) : undefined,
   })
 
