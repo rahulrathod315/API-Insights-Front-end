@@ -84,7 +84,7 @@ export default function DashboardLayout() {
       {/* Main content area */}
       <div
         className={cn(
-          'flex flex-1 flex-col transition-all duration-300',
+          'flex min-w-0 flex-1 flex-col transition-all duration-300',
           // Offset for sidebar width on desktop
           collapsed ? 'md:ml-16' : 'md:ml-64'
         )}

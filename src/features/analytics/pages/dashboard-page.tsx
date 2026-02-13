@@ -27,9 +27,13 @@ function normalizeDashboardParams(params: AnalyticsParams): AnalyticsParams {
 
 type ProjectRow = DashboardData['projects'][number]
 
+const DEFAULT_PAGE_SIZE = 10
+
 export default function DashboardPage() {
   const [params, setParams] = useState<AnalyticsParams>({ days: 7 })
   const normalizedParams = normalizeDashboardParams(params)
+  const [tablePage, setTablePage] = useState(1)
+  const [tablePageSize, setTablePageSize] = useState(DEFAULT_PAGE_SIZE)
 
   const dashboard = useDashboard(normalizedParams)
 
@@ -61,6 +65,11 @@ export default function DashboardPage() {
       .sort((a, b) => b.error_rate - a.error_rate)
       .slice(0, 5)
   ), [projects])
+
+  const paginatedProjects = useMemo(() => {
+    const start = (tablePage - 1) * tablePageSize
+    return projects.slice(start, start + tablePageSize)
+  }, [projects, tablePage, tablePageSize])
 
   const columns = useMemo<Column<ProjectRow>[]>(
     () => [
@@ -229,8 +238,16 @@ export default function DashboardPage() {
         <CardContent>
           <DataTable
             columns={columns}
-            data={dashboard.data?.projects ?? []}
+            data={paginatedProjects}
             isLoading={dashboard.isLoading}
+            pagination={
+              projects.length > 0
+                ? { page: tablePage, pageSize: tablePageSize, total: projects.length }
+                : undefined
+            }
+            onPageChange={setTablePage}
+            onPageSizeChange={(size) => { setTablePageSize(size); setTablePage(1) }}
+            rowKey={(row) => row.id}
           />
         </CardContent>
       </Card>

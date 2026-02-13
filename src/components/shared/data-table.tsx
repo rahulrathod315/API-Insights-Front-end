@@ -2,6 +2,13 @@ import { cn } from '@/lib/utils/cn'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react'
 import { useReducedMotion } from '@/lib/animation'
 import type { ReactNode } from 'react'
@@ -19,11 +26,14 @@ interface PaginationConfig {
   total: number
 }
 
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
+
 interface DataTableProps<T> {
   columns: Column<T>[]
   data: T[]
   pagination?: PaginationConfig
   onPageChange?: (page: number) => void
+  onPageSizeChange?: (pageSize: number) => void
   isLoading?: boolean
   className?: string
   rowKey?: (row: T) => string | number
@@ -43,6 +53,7 @@ function DataTable<T>({
   data,
   pagination,
   onPageChange,
+  onPageSizeChange,
   isLoading = false,
   className,
   rowKey,
@@ -195,56 +206,80 @@ function DataTable<T>({
         </table>
       </div>
 
-      {pagination && totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-4">
-          <p className="text-sm text-muted-foreground">
-            Showing{' '}
-            {(pagination.page - 1) * pagination.pageSize + 1} to{' '}
-            {Math.min(pagination.page * pagination.pageSize, pagination.total)}{' '}
-            of {pagination.total} results
-          </p>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              disabled={pagination.page <= 1}
-              onClick={() => onPageChange?.(pagination.page - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="sr-only">Previous page</span>
-            </Button>
-            {pageNumbers.map((pageNum, idx) =>
-              pageNum === -1 ? (
-                <span
-                  key={`ellipsis-${idx}`}
-                  className="flex h-8 w-8 items-center justify-center text-sm text-muted-foreground"
+      {pagination && (totalPages > 1 || onPageSizeChange) && (
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-4">
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              Showing{' '}
+              {(pagination.page - 1) * pagination.pageSize + 1} to{' '}
+              {Math.min(pagination.page * pagination.pageSize, pagination.total)}{' '}
+              of {pagination.total} results
+            </p>
+            {onPageSizeChange && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Rows:</span>
+                <Select
+                  value={String(pagination.pageSize)}
+                  onValueChange={(value) => onPageSizeChange(Number(value))}
                 >
-                  ...
-                </span>
-              ) : (
-                <Button
-                  key={pageNum}
-                  variant={pageNum === pagination.page ? 'default' : 'outline'}
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => onPageChange?.(pageNum)}
-                >
-                  {pageNum}
-                </Button>
-              )
+                  <SelectTrigger className="h-8 w-[70px]">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAGE_SIZE_OPTIONS.map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              disabled={pagination.page >= totalPages}
-              onClick={() => onPageChange?.(pagination.page + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-              <span className="sr-only">Next page</span>
-            </Button>
           </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                disabled={pagination.page <= 1}
+                onClick={() => onPageChange?.(pagination.page - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="sr-only">Previous page</span>
+              </Button>
+              {pageNumbers.map((pageNum, idx) =>
+                pageNum === -1 ? (
+                  <span
+                    key={`ellipsis-${idx}`}
+                    className="flex h-8 w-8 items-center justify-center text-sm text-muted-foreground"
+                  >
+                    ...
+                  </span>
+                ) : (
+                  <Button
+                    key={pageNum}
+                    variant={pageNum === pagination.page ? 'default' : 'outline'}
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => onPageChange?.(pageNum)}
+                  >
+                    {pageNum}
+                  </Button>
+                )
+              )}
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                disabled={pagination.page >= totalPages}
+                onClick={() => onPageChange?.(pagination.page + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+                <span className="sr-only">Next page</span>
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

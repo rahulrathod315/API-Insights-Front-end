@@ -2,15 +2,24 @@ import { useState } from 'react'
 import { FolderOpen, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { useProjects } from '../hooks'
 import { ProjectCard } from '../components/project-card'
 import { CreateProjectDialog } from '../components/create-project-dialog'
 
 const DEFAULT_PAGE_SIZE = 9
+const PAGE_SIZE_OPTIONS = [9, 18, 36] as const
 
 export default function ProjectsPage() {
   const [page, setPage] = useState(1)
-  const { data, isLoading } = useProjects({ page, page_size: DEFAULT_PAGE_SIZE })
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const { data, isLoading } = useProjects({ page, page_size: pageSize })
   const projects = data?.results ?? []
   const pagination = data?.pagination
 
@@ -73,47 +82,69 @@ export default function ProjectsPage() {
       )}
 
       {/* Pagination */}
-      {!isLoading && pagination && totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing{' '}
-            {(page - 1) * DEFAULT_PAGE_SIZE + 1} to{' '}
-            {Math.min(page * DEFAULT_PAGE_SIZE, pagination.count)}{' '}
-            of {pagination.count} projects
-          </p>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              disabled={page <= 1}
-              onClick={() => setPage((p) => p - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="sr-only">Previous page</span>
-            </Button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+      {!isLoading && pagination && (
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              Showing{' '}
+              {(page - 1) * pageSize + 1} to{' '}
+              {Math.min(page * pageSize, pagination.count)}{' '}
+              of {pagination.count} projects
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Per page:</span>
+              <Select
+                value={String(pageSize)}
+                onValueChange={(value) => { setPageSize(Number(value)); setPage(1) }}
+              >
+                <SelectTrigger className="h-8 w-[70px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((size) => (
+                    <SelectItem key={size} value={String(size)}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
               <Button
-                key={p}
-                variant={p === page ? 'default' : 'outline'}
+                variant="outline"
                 size="icon"
                 className="h-8 w-8"
-                onClick={() => setPage(p)}
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
               >
-                {p}
+                <ChevronLeft className="h-4 w-4" />
+                <span className="sr-only">Previous page</span>
               </Button>
-            ))}
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              disabled={page >= totalPages}
-              onClick={() => setPage((p) => p + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-              <span className="sr-only">Next page</span>
-            </Button>
-          </div>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <Button
+                  key={p}
+                  variant={p === page ? 'default' : 'outline'}
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => setPage(p)}
+                >
+                  {p}
+                </Button>
+              ))}
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+                <span className="sr-only">Next page</span>
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>
