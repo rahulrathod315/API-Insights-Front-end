@@ -27,4 +27,6 @@ export interface EndpointFilters {
   search?: string
   method?: string
   is_active?: boolean
+  page?: number
+  page_size?: number
 }

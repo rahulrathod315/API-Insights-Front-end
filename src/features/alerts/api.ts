@@ -1,9 +1,13 @@
 import { apiClient } from '@/lib/api/client'
+import type { PaginatedResponse, PaginationParams } from '@/lib/api/types'
 import type { Alert, AlertHistory, CreateAlertRequest, UpdateAlertRequest } from './types'
 
-export async function listAlerts(projectId: string): Promise<Alert[]> {
-  const response = await apiClient.get<{ alerts: Alert[] }>(`/api/v1/analytics/projects/${projectId}/alerts/`)
-  return response.data.alerts
+export async function listAlerts(projectId: string, params?: PaginationParams): Promise<PaginatedResponse<Alert>> {
+  const response = await apiClient.get<PaginatedResponse<Alert>>(
+    `/api/v1/analytics/projects/${projectId}/alerts/`,
+    { params }
+  )
+  return response.data
 }
 
 export async function getAlert(projectId: string, alertId: string): Promise<Alert> {

@@ -15,7 +15,7 @@ import type { Endpoint } from '../types'
 
 export default function EndpointsPage() {
   const { project } = useProjectContext()
-  const { data: endpoints = [], isLoading } = useEndpoints(String(project.id))
+  const { data, isLoading } = useEndpoints(String(project.id), { page: 1, page_size: 1 })
   const deleteMutation = useDeleteEndpoint()
 
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -53,7 +53,8 @@ export default function EndpointsPage() {
     )
   }
 
-  const isEmpty = !isLoading && endpoints.length === 0
+  const totalCount = data?.pagination?.count ?? 0
+  const isEmpty = !isLoading && totalCount === 0
 
   return (
     <div className="flex h-full">

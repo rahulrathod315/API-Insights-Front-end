@@ -1,11 +1,12 @@
 import { apiClient } from '@/lib/api/client'
+import type { PaginatedResponse } from '@/lib/api/types'
 import type { Endpoint, CreateEndpointRequest, UpdateEndpointRequest, EndpointFilters } from './types'
 
 export async function listEndpoints(
   projectId: string,
   filters?: EndpointFilters
-): Promise<Endpoint[]> {
-  const response = await apiClient.get<Endpoint[]>(
+): Promise<PaginatedResponse<Endpoint>> {
+  const response = await apiClient.get<PaginatedResponse<Endpoint>>(
     `/api/v1/projects/${projectId}/endpoints/`,
     { params: filters }
   )

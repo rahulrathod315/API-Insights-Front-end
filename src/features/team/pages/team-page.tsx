@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { UserPlus, LogOut, ArrowRightLeft } from 'lucide-react'
+import { UserPlus, LogOut, ArrowRightLeft, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/shared/page-header'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
@@ -10,11 +10,18 @@ import { MembersTable } from '../components/members-table'
 import { InviteMemberDialog } from '../components/invite-member-dialog'
 import { TransferOwnershipDialog } from '../components/transfer-ownership-dialog'
 
+const DEFAULT_PAGE_SIZE = 20
+
 export default function TeamPage() {
   const { project } = useProjectContext()
   const navigate = useNavigate()
 
-  const { data: members = [], isLoading } = useTeamMembers(String(project.id))
+  const [page, setPage] = useState(1)
+  const { data, isLoading } = useTeamMembers(String(project.id), { page, page_size: DEFAULT_PAGE_SIZE })
+  const members = data?.results ?? []
+  const pagination = data?.pagination
+  const totalPages = pagination?.total_pages ?? 1
+
   const leaveProjectMutation = useLeaveProject()
 
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
@@ -74,6 +81,50 @@ export default function TeamPage() {
         isLoading={isLoading}
         currentUserRole={currentUserRole}
       />
+
+      {pagination && totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing{' '}
+            {(page - 1) * DEFAULT_PAGE_SIZE + 1} to{' '}
+            {Math.min(page * DEFAULT_PAGE_SIZE, pagination.count)}{' '}
+            of {pagination.count} members
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only">Previous page</span>
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <Button
+                key={p}
+                variant={p === page ? 'default' : 'outline'}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage(p)}
+              >
+                {p}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+              <span className="sr-only">Next page</span>
+            </Button>
+          </div>
+        </div>
+      )}
 
       <InviteMemberDialog
         open={inviteDialogOpen}

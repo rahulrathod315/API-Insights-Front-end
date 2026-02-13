@@ -1,12 +1,20 @@
-import { FolderOpen } from 'lucide-react'
+import { useState } from 'react'
+import { FolderOpen, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 import { useProjects } from '../hooks'
 import { ProjectCard } from '../components/project-card'
 import { CreateProjectDialog } from '../components/create-project-dialog'
 
+const DEFAULT_PAGE_SIZE = 9
+
 export default function ProjectsPage() {
-  const { data, isLoading } = useProjects()
-  const projects = data ?? []
+  const [page, setPage] = useState(1)
+  const { data, isLoading } = useProjects({ page, page_size: DEFAULT_PAGE_SIZE })
+  const projects = data?.results ?? []
+  const pagination = data?.pagination
+
+  const totalPages = pagination?.total_pages ?? 1
 
   return (
     <div className="space-y-6 p-6">
@@ -61,6 +69,51 @@ export default function ProjectsPage() {
           {projects.map((project) => (
             <ProjectCard key={project.id} project={project} />
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {!isLoading && pagination && totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            Showing{' '}
+            {(page - 1) * DEFAULT_PAGE_SIZE + 1} to{' '}
+            {Math.min(page * DEFAULT_PAGE_SIZE, pagination.count)}{' '}
+            of {pagination.count} projects
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only">Previous page</span>
+            </Button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <Button
+                key={p}
+                variant={p === page ? 'default' : 'outline'}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setPage(p)}
+              >
+                {p}
+              </Button>
+            ))}
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              <ChevronRight className="h-4 w-4" />
+              <span className="sr-only">Next page</span>
+            </Button>
+          </div>
         </div>
       )}
     </div>

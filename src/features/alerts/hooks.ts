@@ -1,17 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { listAlerts, createAlert, updateAlert, deleteAlert, getAlertHistory } from './api'
+import type { PaginationParams } from '@/lib/api/types'
 import type { CreateAlertRequest, UpdateAlertRequest } from './types'
 
 const alertKeys = {
   all: (projectId: string) => ['alerts', projectId] as const,
+  list: (projectId: string, params?: PaginationParams) =>
+    ['alerts', projectId, params] as const,
   history: (projectId: string, alertId: string) =>
     ['alerts', projectId, alertId, 'history'] as const,
 }
 
-export function useAlerts(projectId: string) {
+export function useAlerts(projectId: string, params?: PaginationParams) {
   return useQuery({
-    queryKey: alertKeys.all(projectId),
-    queryFn: () => listAlerts(projectId),
+    queryKey: alertKeys.list(projectId, params),
+    queryFn: () => listAlerts(projectId, params),
     enabled: !!projectId,
   })
 }

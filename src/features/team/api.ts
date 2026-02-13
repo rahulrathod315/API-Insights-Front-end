@@ -1,4 +1,5 @@
 import { apiClient } from '@/lib/api/client'
+import type { PaginatedResponse, PaginationParams } from '@/lib/api/types'
 import type {
   TeamMember,
   InviteMemberRequest,
@@ -6,9 +7,10 @@ import type {
   TransferOwnershipRequest,
 } from './types'
 
-export async function listMembers(projectId: string): Promise<TeamMember[]> {
-  const response = await apiClient.get<TeamMember[]>(
-    `/api/v1/projects/${projectId}/members/`
+export async function listMembers(projectId: string, params?: PaginationParams): Promise<PaginatedResponse<TeamMember>> {
+  const response = await apiClient.get<PaginatedResponse<TeamMember>>(
+    `/api/v1/projects/${projectId}/members/`,
+    { params }
   )
   return response.data
 }

@@ -20,8 +20,8 @@ export default function DashboardLayout() {
   const { data: projectList } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
-      const response = await apiClient.get<Array<{ id: number; name: string }>>('/api/v1/projects/')
-      return response.data
+      const response = await apiClient.get<{ data: Array<{ id: number; name: string }>; pagination: unknown }>('/api/v1/projects/')
+      return response.data.data
     },
   })
   const projects = (projectList ?? []).map((p) => ({ id: String(p.id), name: p.name }))

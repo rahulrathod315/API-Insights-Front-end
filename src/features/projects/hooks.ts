@@ -7,17 +7,19 @@ import {
   deleteProject,
   regenerateKey,
 } from './api'
+import type { PaginationParams } from '@/lib/api/types'
 import type { CreateProjectRequest, UpdateProjectRequest } from './types'
 
 const projectKeys = {
   all: ['projects'] as const,
+  list: (params?: PaginationParams) => ['projects', params] as const,
   detail: (id: string) => ['projects', id] as const,
 }
 
-export function useProjects() {
+export function useProjects(params?: PaginationParams) {
   return useQuery({
-    queryKey: projectKeys.all,
-    queryFn: listProjects,
+    queryKey: projectKeys.list(params),
+    queryFn: () => listProjects(params),
   })
 }
 

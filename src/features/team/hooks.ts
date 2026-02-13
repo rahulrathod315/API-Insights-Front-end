@@ -7,16 +7,19 @@ import {
   leaveProject,
   transferOwnership,
 } from './api'
+import type { PaginationParams } from '@/lib/api/types'
 import type { InviteMemberRequest, UpdateMemberRoleRequest, TransferOwnershipRequest } from './types'
 
 const teamKeys = {
   all: (projectId: string) => ['team', projectId] as const,
+  list: (projectId: string, params?: PaginationParams) =>
+    ['team', projectId, params] as const,
 }
 
-export function useTeamMembers(projectId: string) {
+export function useTeamMembers(projectId: string, params?: PaginationParams) {
   return useQuery({
-    queryKey: teamKeys.all(projectId),
-    queryFn: () => listMembers(projectId),
+    queryKey: teamKeys.list(projectId, params),
+    queryFn: () => listMembers(projectId, params),
     enabled: !!projectId,
   })
 }

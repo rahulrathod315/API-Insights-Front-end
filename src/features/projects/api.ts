@@ -1,8 +1,9 @@
 import { apiClient } from '@/lib/api/client'
+import type { PaginatedResponse, PaginationParams } from '@/lib/api/types'
 import type { Project, ProjectDetail, CreateProjectRequest, UpdateProjectRequest } from './types'
 
-export async function listProjects(): Promise<Project[]> {
-  const response = await apiClient.get<Project[]>('/api/v1/projects/')
+export async function listProjects(params?: PaginationParams): Promise<PaginatedResponse<Project>> {
+  const response = await apiClient.get<PaginatedResponse<Project>>('/api/v1/projects/', { params })
   return response.data
 }
 
