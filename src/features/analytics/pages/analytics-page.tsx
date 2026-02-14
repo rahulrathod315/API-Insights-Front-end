@@ -1,32 +1,23 @@
 import { useState } from 'react'
-import { Download } from 'lucide-react'
+import { Download, Activity, AlertTriangle, Clock, CheckCircle } from 'lucide-react'
 import { differenceInCalendarDays, isValid, parseISO } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { PageHeader } from '@/components/shared/page-header'
+import { StatCard } from '@/components/shared/stat-card'
+import { CardSkeleton } from '@/components/shared/loading-skeleton'
+import { StaggerGroup, StaggerItem } from '@/components/animation'
 import { useProjectContext } from '@/features/projects/project-context'
-import { OverviewStats } from '../components/overview-stats'
-import { RequestVolumeChart } from '../components/request-volume-chart'
-import { ErrorRateChart } from '../components/error-rate-chart'
-import { ResponseTimeChart } from '../components/response-time-chart'
-import { StatusBreakdown } from '../components/status-breakdown'
-import { UserAgentBreakdown } from '../components/user-agent-breakdown'
-import { TopEndpointsTable } from '../components/top-endpoints-table'
-import { SlowEndpointsTable } from '../components/slow-endpoints-table'
-import { ErrorClusters } from '../components/error-clusters'
-import { PeriodComparison } from '../components/period-comparison'
 import { TimeRangePicker } from '../components/time-range-picker'
 import { ExportDialog } from '../components/export-dialog'
+import { RequestVolumeChart } from '../components/request-volume-chart'
+import { ErrorRateChart } from '../components/error-rate-chart'
 import {
   useSummary,
   useTimeSeries,
-  useRequestsPerEndpoint,
-  useSlowEndpoints,
-  useErrorClusters,
-  useUserAgentBreakdown,
-  useComparison,
 } from '../hooks'
 import { exportData } from '../api'
-import type { AnalyticsParams, ComparisonParams, ExportParams } from '../types'
+import { formatNumber, formatMs, formatPercent } from '@/lib/utils/format'
+import type { AnalyticsParams, ExportParams } from '../types'
 
 function normalizeAnalyticsParams(params: AnalyticsParams): AnalyticsParams {
   if (params.start_date && params.end_date) {
@@ -53,17 +44,9 @@ export default function AnalyticsPage() {
 
   const normalizedParams = normalizeAnalyticsParams(params)
 
-  // Comparison params are optional; set to undefined to disable the query
-  const [comparisonParams] = useState<ComparisonParams | undefined>(undefined)
-
   const summary = useSummary(String(project.id), normalizedParams)
   const timeSeriesParams = { ...normalizedParams, granularity: getGranularity(normalizedParams.days) }
   const timeSeries = useTimeSeries(String(project.id), timeSeriesParams)
-  const endpoints = useRequestsPerEndpoint(String(project.id), normalizedParams)
-  const slowEndpoints = useSlowEndpoints(String(project.id), normalizedParams)
-  const errorClusters = useErrorClusters(String(project.id), normalizedParams)
-  const userAgents = useUserAgentBreakdown(String(project.id), normalizedParams)
-  const comparison = useComparison(String(project.id), comparisonParams)
 
   function getFilenameFromDisposition(disposition?: string) {
     if (!disposition) return null
@@ -93,26 +76,14 @@ export default function AnalyticsPage() {
     URL.revokeObjectURL(url)
   }
 
-  const defaultSummary = {
-    project: { id: 0, name: '' },
-    period: { days: 7, start_date: '', end_date: '' },
-    summary: {
-      total_requests: 0,
-      successful_requests: 0,
-      error_requests: 0,
-      success_rate: 0,
-      avg_response_time_ms: 0,
-    },
-    status_breakdown: {},
-    top_endpoints: [],
-    daily_trend: [],
-  }
+  const s = summary.data?.summary
+  const isLoading = summary.isLoading
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Analytics"
-        description="Deep dive into endpoint behavior, latency, and error patterns"
+        title="Overview"
+        description="High-level summary of API activity and health"
         actions={
           <div className="flex items-center gap-3">
             <TimeRangePicker value={params} onChange={setParams} />
@@ -128,11 +99,55 @@ export default function AnalyticsPage() {
         }
       />
 
-      <OverviewStats
-        data={summary.data ?? defaultSummary}
-        isLoading={summary.isLoading}
-      />
+      {/* Summary Stats */}
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
+      ) : (
+        <StaggerGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StaggerItem>
+            <StatCard
+              title="Total Requests"
+              value={formatNumber(s?.total_requests ?? 0)}
+              icon={Activity}
+              iconClassName="bg-primary/10 text-primary"
+            />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard
+              title="Error Rate"
+              value={formatPercent(
+                s && s.total_requests > 0
+                  ? (s.error_requests / s.total_requests) * 100
+                  : 0
+              )}
+              icon={AlertTriangle}
+              iconClassName="bg-destructive/10 text-destructive"
+            />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard
+              title="Avg Latency"
+              value={formatMs(s?.avg_response_time_ms ?? 0)}
+              icon={Clock}
+              iconClassName="bg-chart-3/10 text-chart-3"
+            />
+          </StaggerItem>
+          <StaggerItem>
+            <StatCard
+              title="Success Rate"
+              value={formatPercent(s?.success_rate ?? 0)}
+              icon={CheckCircle}
+              iconClassName="bg-success/10 text-success"
+            />
+          </StaggerItem>
+        </StaggerGroup>
+      )}
 
+      {/* Quick Traffic + Error snapshot */}
       <div className="grid gap-6 md:grid-cols-2">
         <RequestVolumeChart
           data={timeSeries.data?.data ?? []}
@@ -145,44 +160,6 @@ export default function AnalyticsPage() {
           days={normalizedParams.days}
         />
       </div>
-
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-        <ResponseTimeChart
-          data={timeSeries.data?.data ?? []}
-          isLoading={timeSeries.isLoading}
-          days={normalizedParams.days}
-        />
-        <StatusBreakdown
-          data={summary.data?.status_breakdown ?? {}}
-          isLoading={summary.isLoading}
-        />
-        <UserAgentBreakdown
-          data={userAgents.data?.user_agents ?? []}
-          isLoading={userAgents.isLoading}
-        />
-      </div>
-
-      <TopEndpointsTable
-        data={endpoints.data?.endpoints ?? []}
-        isLoading={endpoints.isLoading}
-      />
-
-      <SlowEndpointsTable
-        data={slowEndpoints.data?.slow_endpoints ?? []}
-        isLoading={slowEndpoints.isLoading}
-      />
-
-      <ErrorClusters
-        data={errorClusters.data}
-        isLoading={errorClusters.isLoading}
-      />
-
-      {comparison.data && (
-        <PeriodComparison
-          data={comparison.data}
-          isLoading={comparison.isLoading}
-        />
-      )}
 
       <ExportDialog
         open={exportDialogOpen}

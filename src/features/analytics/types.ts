@@ -149,3 +149,102 @@ export interface EndpointMetrics {
   hourly_distribution: Array<{ hour: string; count: number; avg_response_time: number }>
   recent_errors: Array<{ id: number; status_code: number; error_message: string; timestamp: string; ip_address: string }>
 }
+
+// Geo-Analytics Types
+
+export interface GeoCountry {
+  country_code: string
+  country: string
+  request_count: number
+  error_count: number
+  error_rate: number
+  avg_response_time_ms: number
+  unique_ips: number
+  percentage: number
+}
+
+export interface GeoOverviewResponse {
+  project: { id: number; name: string }
+  period: { days: number; start_date: string; end_date: string }
+  total_requests: number
+  total_countries: number
+  countries: GeoCountry[]
+}
+
+export interface GeoPoint {
+  latitude: number
+  longitude: number
+  city: string
+  region: string
+  country: string
+  country_code: string
+  request_count: number
+  unique_ips: number
+}
+
+export interface GeoMapResponse {
+  project: { id: number; name: string }
+  period: { days: number; start_date: string; end_date: string }
+  total_points: number
+  points: GeoPoint[]
+}
+
+export interface CountryDetailResponse {
+  project: { id: number; name: string }
+  country: { code: string; name: string }
+  period: { days: number; start_date: string; end_date: string }
+  summary: {
+    total_requests: number
+    error_count: number
+    error_rate: number
+    avg_response_time_ms: number
+    unique_ips: number
+    unique_cities: number
+  }
+  cities: Array<{ city: string; region: string; request_count: number; unique_ips: number }>
+  top_endpoints: Array<{ path: string; method: string; request_count: number; error_count: number }>
+  daily_trend: Array<{ date: string; request_count: number; error_count: number }>
+}
+
+export interface GeoTimeSeriesPoint {
+  timestamp: string
+  countries: Array<{ country_code: string; country: string; request_count: number }>
+}
+
+export interface GeoTimeSeriesResponse {
+  project: { id: number; name: string }
+  period: { days: number; granularity: string; start_date: string; end_date: string }
+  data: GeoTimeSeriesPoint[]
+}
+
+export interface GeoRegionStats {
+  country_code: string
+  country: string
+  request_count: number
+  error_count: number
+  error_rate: number
+  avg_response_time_ms: number
+}
+
+export interface GeoPerformanceResponse {
+  project: { id: number; name: string }
+  period: { days: number; start_date: string; end_date: string }
+  total_countries: number
+  fastest_regions: GeoRegionStats[]
+  slowest_regions: GeoRegionStats[]
+  highest_error_rate_regions: GeoRegionStats[]
+  all_regions: GeoRegionStats[]
+}
+
+export interface GeoISP {
+  isp: string
+  asn: string
+  unique_ips: number
+  request_count: number
+}
+
+export interface GeoISPResponse {
+  project: { id: number; name: string }
+  period: { days: number; start_date: string; end_date: string }
+  isps: GeoISP[]
+}

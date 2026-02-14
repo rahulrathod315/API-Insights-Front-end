@@ -5,10 +5,16 @@ import type {
   AnalyticsParams,
   ComparisonParams,
   ComparisonData,
+  CountryDetailResponse,
   DashboardData,
   EndpointMetrics,
   ErrorClustersResponse,
   ExportParams,
+  GeoISPResponse,
+  GeoMapResponse,
+  GeoOverviewResponse,
+  GeoPerformanceResponse,
+  GeoTimeSeriesResponse,
   ProjectSummary,
   RequestsPerEndpointResponse,
   SlowEndpointsResponse,
@@ -74,5 +80,37 @@ export async function exportData(
 
 export async function getEndpointMetrics(projectId: string, endpointId: string, params?: AnalyticsParams): Promise<EndpointMetrics> {
   const response = await apiClient.get<EndpointMetrics>(`/api/v1/analytics/projects/${projectId}/endpoints/${endpointId}/`, { params })
+  return response.data
+}
+
+// Geo-Analytics API
+
+export async function getGeoOverview(projectId: string, params?: AnalyticsParams): Promise<GeoOverviewResponse> {
+  const response = await apiClient.get<GeoOverviewResponse>(`/api/v1/analytics/projects/${projectId}/geo/`, { params })
+  return response.data
+}
+
+export async function getGeoMap(projectId: string, params?: AnalyticsParams): Promise<GeoMapResponse> {
+  const response = await apiClient.get<GeoMapResponse>(`/api/v1/analytics/projects/${projectId}/geo/map/`, { params })
+  return response.data
+}
+
+export async function getCountryDetail(projectId: string, countryCode: string, params?: AnalyticsParams): Promise<CountryDetailResponse> {
+  const response = await apiClient.get<CountryDetailResponse>(`/api/v1/analytics/projects/${projectId}/geo/countries/${countryCode}/`, { params })
+  return response.data
+}
+
+export async function getGeoTimeSeries(projectId: string, params?: AnalyticsParams): Promise<GeoTimeSeriesResponse> {
+  const response = await apiClient.get<GeoTimeSeriesResponse>(`/api/v1/analytics/projects/${projectId}/geo/time-series/`, { params })
+  return response.data
+}
+
+export async function getGeoPerformance(projectId: string, params?: AnalyticsParams): Promise<GeoPerformanceResponse> {
+  const response = await apiClient.get<GeoPerformanceResponse>(`/api/v1/analytics/projects/${projectId}/geo/performance/`, { params })
+  return response.data
+}
+
+export async function getGeoISPs(projectId: string, params?: AnalyticsParams): Promise<GeoISPResponse> {
+  const response = await apiClient.get<GeoISPResponse>(`/api/v1/analytics/projects/${projectId}/geo/isps/`, { params })
   return response.data
 }

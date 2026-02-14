@@ -1,9 +1,15 @@
 import { useQuery } from '@tanstack/react-query'
 import {
   getComparison,
+  getCountryDetail,
   getDashboard,
   getEndpointMetrics,
   getErrorClusters,
+  getGeoISPs,
+  getGeoMap,
+  getGeoOverview,
+  getGeoPerformance,
+  getGeoTimeSeries,
   getUserAgentBreakdown,
   getRequestsPerEndpoint,
   getSlowEndpoints,
@@ -120,6 +126,74 @@ export function useEndpointMetrics(
     queryKey: ['analytics', 'endpoint-metrics', projectId, endpointId, params],
     queryFn: () => getEndpointMetrics(projectId, endpointId, params),
     enabled: !!projectId && !!endpointId,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+  })
+}
+
+// Geo-Analytics Hooks
+
+export function useGeoOverview(projectId: string, params?: AnalyticsParams) {
+  return useQuery({
+    queryKey: ['analytics', 'geo-overview', projectId, params],
+    queryFn: () => getGeoOverview(projectId, params),
+    enabled: !!projectId,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+  })
+}
+
+export function useGeoMap(projectId: string, params?: AnalyticsParams) {
+  return useQuery({
+    queryKey: ['analytics', 'geo-map', projectId, params],
+    queryFn: () => getGeoMap(projectId, params),
+    enabled: !!projectId,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+  })
+}
+
+export function useCountryDetail(projectId: string, countryCode: string | null, params?: AnalyticsParams) {
+  return useQuery({
+    queryKey: ['analytics', 'country-detail', projectId, countryCode, params],
+    queryFn: () => getCountryDetail(projectId, countryCode!, params),
+    enabled: !!projectId && !!countryCode,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+  })
+}
+
+export function useGeoTimeSeries(projectId: string, params?: AnalyticsParams) {
+  return useQuery({
+    queryKey: ['analytics', 'geo-time-series', projectId, params],
+    queryFn: () => getGeoTimeSeries(projectId, params),
+    enabled: !!projectId,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+  })
+}
+
+export function useGeoPerformance(projectId: string, params?: AnalyticsParams) {
+  return useQuery({
+    queryKey: ['analytics', 'geo-performance', projectId, params],
+    queryFn: () => getGeoPerformance(projectId, params),
+    enabled: !!projectId,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+  })
+}
+
+export function useGeoISPs(projectId: string, params?: AnalyticsParams) {
+  return useQuery({
+    queryKey: ['analytics', 'geo-isps', projectId, params],
+    queryFn: () => getGeoISPs(projectId, params),
+    enabled: !!projectId,
     refetchOnMount: 'always',
     refetchOnWindowFocus: true,
     refetchInterval: 30_000,

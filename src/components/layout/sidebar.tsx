@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useLocation, useParams, Link } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -13,6 +14,11 @@ import {
   PanelLeftClose,
   PanelLeft,
   X,
+  ChevronDown,
+  Activity,
+  Zap,
+  AlertTriangle,
+  MapPin,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { Button } from '@/components/ui/button'
@@ -32,6 +38,19 @@ interface NavItem {
   path: string
 }
 
+interface NavGroup {
+  label: string
+  icon: ReactNode
+  basePath: string
+  children: NavItem[]
+}
+
+type NavEntry = NavItem | NavGroup
+
+function isNavGroup(entry: NavEntry): entry is NavGroup {
+  return 'children' in entry
+}
+
 interface SidebarProps {
   collapsed: boolean
   onToggleCollapse: () => void
@@ -41,7 +60,7 @@ interface SidebarProps {
   currentProjectId?: string
 }
 
-function getNavItems(projectId: string): NavItem[] {
+function getNavEntries(projectId: string): NavEntry[] {
   return [
     {
       label: 'Dashboard',
@@ -56,7 +75,34 @@ function getNavItems(projectId: string): NavItem[] {
     {
       label: 'Analytics',
       icon: <BarChart3 className="h-5 w-5" />,
-      path: `/projects/${projectId}/analytics`,
+      basePath: `/projects/${projectId}/analytics`,
+      children: [
+        {
+          label: 'Overview',
+          icon: <Activity className="h-4 w-4" />,
+          path: `/projects/${projectId}/analytics`,
+        },
+        {
+          label: 'Traffic',
+          icon: <BarChart3 className="h-4 w-4" />,
+          path: `/projects/${projectId}/analytics/traffic`,
+        },
+        {
+          label: 'Performance',
+          icon: <Zap className="h-4 w-4" />,
+          path: `/projects/${projectId}/analytics/performance`,
+        },
+        {
+          label: 'Errors',
+          icon: <AlertTriangle className="h-4 w-4" />,
+          path: `/projects/${projectId}/analytics/errors`,
+        },
+        {
+          label: 'Geo',
+          icon: <MapPin className="h-4 w-4" />,
+          path: `/projects/${projectId}/analytics/geo`,
+        },
+      ],
     },
     {
       label: 'SLA',
@@ -97,10 +143,28 @@ export function Sidebar({
   const location = useLocation()
   const { projectId } = useParams<{ projectId: string }>()
   const resolvedProjectId = currentProjectId ?? projectId ?? ''
-  const navItems = getNavItems(resolvedProjectId)
+  const navEntries = getNavEntries(resolvedProjectId)
 
   function isActive(path: string): boolean {
     return location.pathname === path || location.pathname.startsWith(path + '/')
+  }
+
+  function isGroupActive(group: NavGroup): boolean {
+    return location.pathname.startsWith(group.basePath)
+  }
+
+  // Auto-expand analytics group if any child is active
+  const analyticsActive = navEntries.some(
+    (e) => isNavGroup(e) && isGroupActive(e)
+  )
+  const [analyticsOpen, setAnalyticsOpen] = useState(analyticsActive)
+
+  function isExactActive(path: string, group: NavGroup): boolean {
+    // For the Overview item, only match exact path (not children)
+    if (path === group.basePath) {
+      return location.pathname === path
+    }
+    return isActive(path)
   }
 
   const sidebarContent = (
@@ -137,11 +201,27 @@ export function Sidebar({
       <ScrollArea className="flex-1 px-3 py-2">
         <TooltipProvider delayDuration={0}>
           <nav className="flex flex-col gap-1">
-            {navItems.map((item) => {
-              const active = isActive(item.path)
+            {navEntries.map((entry) => {
+              if (isNavGroup(entry)) {
+                return (
+                  <NavGroupItem
+                    key={entry.basePath}
+                    group={entry}
+                    collapsed={collapsed}
+                    isOpen={analyticsOpen || isGroupActive(entry)}
+                    onToggle={() => setAnalyticsOpen((prev) => !prev)}
+                    isActive={isActive}
+                    isExactActive={(path) => isExactActive(path, entry)}
+                    isGroupActive={isGroupActive(entry)}
+                    onMobileClose={onMobileClose}
+                  />
+                )
+              }
+
+              const active = isActive(entry.path)
               const linkContent = (
                 <Link
-                  to={item.path}
+                  to={entry.path}
                   onClick={onMobileClose}
                   className={cn(
                     'relative flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
@@ -154,23 +234,23 @@ export function Sidebar({
                   {active && (
                     <span className="sidebar-active-indicator absolute left-0 top-1 bottom-1 w-0.5 rounded-full bg-primary" />
                   )}
-                  <span className="shrink-0">{item.icon}</span>
-                  {!collapsed && <span>{item.label}</span>}
+                  <span className="shrink-0">{entry.icon}</span>
+                  {!collapsed && <span>{entry.label}</span>}
                 </Link>
               )
 
               if (collapsed) {
                 return (
-                  <Tooltip key={item.path}>
+                  <Tooltip key={entry.path}>
                     <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
                     <TooltipContent side="right">
-                      {item.label}
+                      {entry.label}
                     </TooltipContent>
                   </Tooltip>
                 )
               }
 
-              return <div key={item.path}>{linkContent}</div>
+              return <div key={entry.path}>{linkContent}</div>
             })}
           </nav>
         </TooltipProvider>
@@ -240,5 +320,112 @@ export function Sidebar({
         {sidebarContent}
       </aside>
     </>
+  )
+}
+
+function NavGroupItem({
+  group,
+  collapsed,
+  isOpen,
+  onToggle,
+  isExactActive,
+  isGroupActive,
+  onMobileClose,
+}: {
+  group: NavGroup
+  collapsed: boolean
+  isOpen: boolean
+  onToggle: () => void
+  isActive: (path: string) => boolean
+  isExactActive: (path: string) => boolean
+  isGroupActive: boolean
+  onMobileClose?: () => void
+}) {
+  if (collapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Link
+            to={group.basePath}
+            onClick={onMobileClose}
+            className={cn(
+              'relative flex items-center justify-center rounded-md px-2 py-2 text-sm font-medium transition-colors',
+              isGroupActive
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+            )}
+          >
+            {isGroupActive && (
+              <span className="sidebar-active-indicator absolute left-0 top-1 bottom-1 w-0.5 rounded-full bg-primary" />
+            )}
+            <span className="shrink-0">{group.icon}</span>
+          </Link>
+        </TooltipTrigger>
+        <TooltipContent side="right">{group.label}</TooltipContent>
+      </Tooltip>
+    )
+  }
+
+  return (
+    <div>
+      {/* Group header */}
+      <button
+        type="button"
+        onClick={onToggle}
+        className={cn(
+          'relative flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+          isGroupActive
+            ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+        )}
+      >
+        {isGroupActive && (
+          <span className="sidebar-active-indicator absolute left-0 top-1 bottom-1 w-0.5 rounded-full bg-primary" />
+        )}
+        <span className="shrink-0">{group.icon}</span>
+        <span className="flex-1 text-left">{group.label}</span>
+        <ChevronDown
+          className={cn(
+            'h-4 w-4 transition-transform duration-200',
+            isOpen && 'rotate-180'
+          )}
+        />
+      </button>
+
+      {/* Children */}
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="ml-4 mt-1 flex flex-col gap-0.5 border-l border-sidebar-border pl-3">
+              {group.children.map((child) => {
+                const active = isExactActive(child.path)
+                return (
+                  <Link
+                    key={child.path}
+                    to={child.path}
+                    onClick={onMobileClose}
+                    className={cn(
+                      'flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] font-medium transition-colors',
+                      active
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                        : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                    )}
+                  >
+                    <span className="shrink-0">{child.icon}</span>
+                    <span>{child.label}</span>
+                  </Link>
+                )
+              })}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }

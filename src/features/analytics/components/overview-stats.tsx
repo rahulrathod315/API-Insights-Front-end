@@ -28,7 +28,7 @@ function OverviewStats({ data, isLoading }: OverviewStatsProps) {
           title="Total Requests"
           value={formatNumber(data.summary.total_requests)}
           icon={Activity}
-          iconClassName="bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
+          iconClassName="bg-primary/10 text-primary"
         />
       </StaggerItem>
       <StaggerItem>
@@ -40,7 +40,7 @@ function OverviewStats({ data, isLoading }: OverviewStatsProps) {
               : 0
           )}
           icon={AlertTriangle}
-          iconClassName="bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400"
+          iconClassName="bg-destructive/10 text-destructive"
         />
       </StaggerItem>
       <StaggerItem>
@@ -48,7 +48,7 @@ function OverviewStats({ data, isLoading }: OverviewStatsProps) {
           title="Avg Response Time"
           value={formatMs(data.summary.avg_response_time_ms)}
           icon={Clock}
-          iconClassName="bg-violet-50 text-violet-600 dark:bg-violet-950 dark:text-violet-400"
+          iconClassName="bg-muted text-muted-foreground"
         />
       </StaggerItem>
       <StaggerItem>
@@ -56,7 +56,7 @@ function OverviewStats({ data, isLoading }: OverviewStatsProps) {
           title="Success Rate"
           value={formatPercent(data.summary.success_rate)}
           icon={CheckCircle}
-          iconClassName="bg-emerald-50 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400"
+          iconClassName="bg-success/10 text-success"
         />
       </StaggerItem>
     </StaggerGroup>

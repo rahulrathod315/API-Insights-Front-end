@@ -16,6 +16,10 @@ const ProjectSettingsPage = lazy(() => import('@/features/projects/pages/project
 
 const DashboardPage = lazy(() => import('@/features/analytics/pages/dashboard-page'))
 const AnalyticsPage = lazy(() => import('@/features/analytics/pages/analytics-page'))
+const TrafficAnalyticsPage = lazy(() => import('@/features/analytics/pages/traffic-analytics-page'))
+const PerformanceAnalyticsPage = lazy(() => import('@/features/analytics/pages/performance-analytics-page'))
+const ErrorAnalyticsPage = lazy(() => import('@/features/analytics/pages/error-analytics-page'))
+const GeoAnalyticsPage = lazy(() => import('@/features/analytics/pages/geo-analytics-page'))
 const EndpointAnalyticsPage = lazy(() => import('@/features/analytics/pages/endpoint-analytics-page'))
 
 const EndpointsPage = lazy(() => import('@/features/endpoints/pages/endpoints-page'))
@@ -100,8 +104,12 @@ export function AppRouter() {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
-          <Route path="endpoints" element={<EndpointsPage />} />
+          <Route path="analytics/traffic" element={<TrafficAnalyticsPage />} />
+          <Route path="analytics/performance" element={<PerformanceAnalyticsPage />} />
+          <Route path="analytics/errors" element={<ErrorAnalyticsPage />} />
+          <Route path="analytics/geo" element={<GeoAnalyticsPage />} />
           <Route path="analytics/endpoints/:endpointId" element={<EndpointAnalyticsPage />} />
+          <Route path="endpoints" element={<EndpointsPage />} />
           <Route path="sla" element={<SlaPage />} />
           <Route path="alerts" element={<AlertsPage />} />
           <Route path="team" element={<TeamPage />} />
