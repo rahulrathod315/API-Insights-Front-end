@@ -107,10 +107,16 @@ export function ResponseTimeDistribution({ data, isLoading }: ResponseTimeDistri
                 border: '1px solid var(--border)',
                 borderRadius: '6px',
               }}
-              formatter={(value: number, _name: string, props: { payload: Bucket }) => [
-                `${value.toLocaleString()} requests (${props.payload.percentage.toFixed(1)}%)`,
-                'Count',
-              ]}
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null
+                const item = payload[0].payload as Bucket
+                return (
+                  <div className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
+                    <p className="font-medium">{item.label}</p>
+                    <p>{item.count.toLocaleString()} requests ({item.percentage.toFixed(1)}%)</p>
+                  </div>
+                )
+              }}
             />
             <Bar dataKey="count" radius={[4, 4, 0, 0]} {...animation}>
               {buckets.map((bucket, i) => (
