@@ -15,6 +15,7 @@ import { SlowEndpointsTable } from '../components/slow-endpoints-table'
 import { ErrorClusters } from '../components/error-clusters'
 import { PeriodComparison } from '../components/period-comparison'
 import { TimeRangePicker } from '../components/time-range-picker'
+import { ExportDialog } from '../components/export-dialog'
 import {
   useSummary,
   useTimeSeries,
@@ -48,7 +49,7 @@ function getGranularity(days?: number): 'hour' | 'day' | 'week' | 'month' {
 export default function AnalyticsPage() {
   const { project } = useProjectContext()
   const [params, setParams] = useState<AnalyticsParams>({ days: 7 })
-  const [isExporting, setIsExporting] = useState(false)
+  const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   const normalizedParams = normalizeAnalyticsParams(params)
 
@@ -70,30 +71,26 @@ export default function AnalyticsPage() {
     return match?.[1] ?? null
   }
 
-  async function handleExport() {
-    setIsExporting(true)
-    try {
-      const exportParams: ExportParams = {
-        format: 'csv',
-        start_date: params.start_date,
-        end_date: params.end_date,
-      }
-      const response = await exportData(String(project.id), exportParams)
-      const blob = response.data
-      const filename =
-        getFilenameFromDisposition(response.headers?.['content-disposition']) ??
-        `analytics-${project.id}-${Date.now()}.csv`
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = filename
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-    } finally {
-      setIsExporting(false)
+  async function handleExport(exportOpts: { format: 'csv' | 'json'; start_date: string; end_date: string }) {
+    const exportParams: ExportParams = {
+      export_format: exportOpts.format,
+      start_date: exportOpts.start_date,
+      end_date: exportOpts.end_date,
     }
+    const response = await exportData(String(project.id), exportParams)
+    const blob = response.data
+    const ext = exportOpts.format
+    const filename =
+      getFilenameFromDisposition(response.headers?.['content-disposition']) ??
+      `analytics-${project.id}-${Date.now()}.${ext}`
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = filename
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
   }
 
   const defaultSummary = {
@@ -122,11 +119,10 @@ export default function AnalyticsPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleExport}
-              disabled={isExporting}
+              onClick={() => setExportDialogOpen(true)}
             >
               <Download className="mr-1.5 h-3.5 w-3.5" />
-              {isExporting ? 'Exporting...' : 'Export'}
+              Export
             </Button>
           </div>
         }
@@ -187,6 +183,12 @@ export default function AnalyticsPage() {
           isLoading={comparison.isLoading}
         />
       )}
+
+      <ExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        onExport={handleExport}
+      />
     </div>
   )
 }

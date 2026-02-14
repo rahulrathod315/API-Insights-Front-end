@@ -5,6 +5,7 @@ import {
   LayoutDashboard,
   Globe,
   BarChart3,
+  Shield,
   Bell,
   Users,
   FileText,
@@ -56,6 +57,11 @@ function getNavItems(projectId: string): NavItem[] {
       label: 'Analytics',
       icon: <BarChart3 className="h-5 w-5" />,
       path: `/projects/${projectId}/analytics`,
+    },
+    {
+      label: 'SLA',
+      icon: <Shield className="h-5 w-5" />,
+      path: `/projects/${projectId}/sla`,
     },
     {
       label: 'Alerts',

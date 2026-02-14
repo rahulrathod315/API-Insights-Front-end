@@ -14,7 +14,7 @@ export interface ComparisonParams {
 }
 
 export interface ExportParams {
-  format?: 'json' | 'csv'
+  export_format?: 'json' | 'csv'
   start_date?: string
   end_date?: string
   limit?: number

@@ -22,6 +22,8 @@ const EndpointsPage = lazy(() => import('@/features/endpoints/pages/endpoints-pa
 
 const AlertsPage = lazy(() => import('@/features/alerts/pages/alerts-page'))
 
+const SlaPage = lazy(() => import('@/features/sla/pages/sla-page'))
+
 const TeamPage = lazy(() => import('@/features/team/pages/team-page'))
 
 const SettingsPage = lazy(() => import('@/features/settings/pages/settings-page'))
@@ -100,6 +102,7 @@ export function AppRouter() {
           <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="endpoints" element={<EndpointsPage />} />
           <Route path="analytics/endpoints/:endpointId" element={<EndpointAnalyticsPage />} />
+          <Route path="sla" element={<SlaPage />} />
           <Route path="alerts" element={<AlertsPage />} />
           <Route path="team" element={<TeamPage />} />
           <Route path="audit-logs" element={<AuditLogsPage />} />
