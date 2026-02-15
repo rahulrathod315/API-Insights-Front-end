@@ -9,7 +9,6 @@ interface ComplianceGaugesProps {
 }
 
 function UptimeGauge({ uptime, target }: { uptime: number; target: number }) {
-  const isMeeting = uptime >= target
   const data = [
     { name: 'uptime', value: uptime },
     { name: 'remaining', value: 100 - uptime },
@@ -60,14 +59,12 @@ function MetricBar({
   current,
   target,
   formatValue,
-  isCompliant,
   invertComparison = false,
 }: {
   label: string
   current: number
   target: number
   formatValue: (v: number) => string
-  isCompliant: boolean
   invertComparison?: boolean
 }) {
   const ratio = invertComparison
@@ -145,7 +142,6 @@ function ComplianceGauges({ compliance }: ComplianceGaugesProps) {
           current={compliance.response_time.current_ms}
           target={compliance.response_time.target_ms}
           formatValue={formatMs}
-          isCompliant={compliance.response_time.is_compliant}
         />
       )}
 
@@ -155,7 +151,6 @@ function ComplianceGauges({ compliance }: ComplianceGaugesProps) {
           current={compliance.error_rate.current_percent}
           target={compliance.error_rate.target_percent}
           formatValue={formatPercent}
-          isCompliant={compliance.error_rate.is_compliant}
           invertComparison
         />
       )}

@@ -138,7 +138,6 @@ function StatusBreakdown({ data, isLoading }: StatusBreakdownProps) {
                     nameKey="name"
                     stroke="var(--background)"
                     strokeWidth={2}
-                    activeIndex={activeIndex}
                     activeShape={renderActiveShape}
                     onMouseEnter={(_, index) => setActiveIndex(index)}
                     onMouseLeave={() => setActiveIndex(undefined)}

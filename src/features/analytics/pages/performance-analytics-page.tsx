@@ -1,7 +1,6 @@
 import { useMemo } from 'react'
 import { differenceInCalendarDays, isValid, parseISO } from 'date-fns'
 import { PageHeader } from '@/components/shared/page-header'
-import { StatCard } from '@/components/shared/stat-card'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useProjectContext } from '@/features/projects/project-context'
 import { TimeRangePicker } from '../components/time-range-picker'

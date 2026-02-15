@@ -123,7 +123,6 @@ function UserAgentBreakdown({ data, isLoading }: UserAgentBreakdownProps) {
                     nameKey="name"
                     stroke="var(--background)"
                     strokeWidth={2}
-                    activeIndex={activeIndex}
                     activeShape={renderActiveShape}
                     onMouseEnter={(_, index) => setActiveIndex(index)}
                     onMouseLeave={() => setActiveIndex(undefined)}
