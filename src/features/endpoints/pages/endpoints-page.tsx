@@ -57,8 +57,8 @@ export default function EndpointsPage() {
   const isEmpty = !isLoading && totalCount === 0
 
   return (
-    <div className="flex h-full">
-      <div className="flex-1 space-y-6 p-6">
+    <div className="flex min-h-0">
+      <div className="min-w-0 flex-1 space-y-6">
         <PageHeader
           title="Endpoints"
           description="Monitor and manage your API endpoints."

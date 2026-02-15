@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { useUpdateProject, useRegenerateKey, useDeleteProject } from '../hooks'
 import { formatDate, formatNumber } from '@/lib/utils/format'
+import { useTimezone } from '@/lib/hooks/use-timezone'
 import type { ProjectDetail } from '../types'
 
 const updateProjectSchema = z.object({
@@ -37,6 +38,7 @@ interface ProjectSettingsFormProps {
 }
 
 function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
+  const tz = useTimezone()
   const navigate = useNavigate()
   const updateProject = useUpdateProject()
   const regenerateKey = useRegenerateKey()
@@ -99,11 +101,11 @@ function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
         <CardContent className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1">
             <p className="text-xs uppercase text-muted-foreground">Created</p>
-            <p className="text-sm font-medium">{formatDate(project.created_at)}</p>
+            <p className="text-sm font-medium">{formatDate(project.created_at, tz)}</p>
           </div>
           <div className="space-y-1">
             <p className="text-xs uppercase text-muted-foreground">Last Updated</p>
-            <p className="text-sm font-medium">{formatDate(project.updated_at)}</p>
+            <p className="text-sm font-medium">{formatDate(project.updated_at, tz)}</p>
           </div>
           <div className="space-y-1">
             <p className="text-xs uppercase text-muted-foreground">Endpoints</p>

@@ -197,7 +197,7 @@ function TwoFactorSetup() {
           <div className="space-y-6">
             <div className="space-y-3">
               <h4 className="text-sm font-medium">1. Scan this QR code with your authenticator app</h4>
-              <div className="flex justify-center rounded-lg border bg-white p-4">
+              <div className="flex justify-center rounded-lg border bg-[#FFFFFF] p-4">
                 <img
                   src={setupData.qr_code}
                   alt="2FA QR Code"

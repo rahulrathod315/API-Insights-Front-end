@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -10,13 +9,13 @@ import { RequestVolumeChart } from '../components/request-volume-chart'
 import { StatusBreakdown } from '../components/status-breakdown'
 import { TimeRangePicker } from '../components/time-range-picker'
 import { useEndpointMetrics, useTimeSeries } from '../hooks'
+import { useAnalyticsParams } from '../analytics-params-context'
 import { formatNumber, formatMs } from '@/lib/utils/format'
-import type { AnalyticsParams } from '../types'
 
 export default function EndpointAnalyticsPage() {
   const { project } = useProjectContext()
   const { endpointId } = useParams<{ endpointId: string }>()
-  const [params, setParams] = useState<AnalyticsParams>({ days: 7 })
+  const { params, setParams } = useAnalyticsParams()
 
   const { data, isLoading } = useEndpointMetrics(
     String(project.id),

@@ -18,14 +18,14 @@ import {
   useGeoPerformance,
   useGeoISPs,
 } from '../hooks'
+import { useAnalyticsParams } from '../analytics-params-context'
 import { formatNumber } from '@/lib/utils/format'
-import type { AnalyticsParams } from '../types'
 
 export default function GeoAnalyticsPage() {
   const { project } = useProjectContext()
   const projectId = String(project.id)
 
-  const [params, setParams] = useState<AnalyticsParams>({ days: 7 })
+  const { params, setParams } = useAnalyticsParams()
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null)
 
   const overview = useGeoOverview(projectId, params)
@@ -62,7 +62,7 @@ export default function GeoAnalyticsPage() {
             title="Countries"
             value={formatNumber(overview.data?.total_countries ?? 0)}
             icon={MapPin}
-            iconClassName="bg-success/10 text-success"
+            iconClassName="bg-primary/10 text-primary"
           />
         </StaggerItem>
         <StaggerItem>
@@ -70,7 +70,7 @@ export default function GeoAnalyticsPage() {
             title="Cities"
             value={formatNumber(totalCities)}
             icon={Building2}
-            iconClassName="bg-muted text-muted-foreground"
+            iconClassName="bg-primary/10 text-primary"
           />
         </StaggerItem>
         <StaggerItem>
@@ -78,7 +78,7 @@ export default function GeoAnalyticsPage() {
             title="ISPs"
             value={formatNumber(totalISPs)}
             icon={Wifi}
-            iconClassName="bg-muted text-muted-foreground"
+            iconClassName="bg-primary/10 text-primary"
           />
         </StaggerItem>
       </StaggerGroup>

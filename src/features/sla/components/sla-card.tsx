@@ -23,22 +23,22 @@ function SLACard({ sla, isSelected, onClick }: SLACardProps) {
       onClick={onClick}
     >
       <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <h3 className="font-semibold truncate">{sla.name}</h3>
-            <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="capitalize">{sla.evaluation_period}</span>
-              {sla.endpoint ? (
-                <Badge variant="secondary" className="text-xs">
-                  {sla.endpoint.method} {sla.endpoint.path}
-                </Badge>
-              ) : (
-                <Badge variant="secondary" className="text-xs">
-                  Project-wide
-                </Badge>
-              )}
-            </div>
+        <div className="pr-20">
+          <h3 className="font-semibold truncate">{sla.name}</h3>
+          <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="capitalize">{sla.evaluation_period}</span>
+            {sla.endpoint ? (
+              <Badge variant="secondary" className="text-xs">
+                {sla.endpoint.method} {sla.endpoint.path}
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="text-xs">
+                Project-wide
+              </Badge>
+            )}
           </div>
+        </div>
+        <div className="mt-2">
           <Badge variant={isMeeting ? 'success' : 'destructive'}>
             {isMeeting ? 'Meeting' : 'Breaching'}
           </Badge>
@@ -49,16 +49,13 @@ function SLACard({ sla, isSelected, onClick }: SLACardProps) {
           <div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Uptime</span>
-              <span className={cn('font-medium', compliance.is_meeting_uptime ? 'text-success' : 'text-destructive')}>
+              <span className="font-medium text-primary">
                 {formatPercent(compliance.uptime_percent)} / {formatPercent(compliance.uptime_target)}
               </span>
             </div>
             <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className={cn(
-                  'h-full rounded-full transition-all',
-                  compliance.is_meeting_uptime ? 'bg-success' : 'bg-destructive'
-                )}
+                className="h-full rounded-full transition-all bg-primary"
                 style={{ width: `${Math.min(100, compliance.uptime_percent)}%` }}
               />
             </div>
@@ -70,7 +67,7 @@ function SLACard({ sla, isSelected, onClick }: SLACardProps) {
               <span className="text-muted-foreground">
                 Response Time ({compliance.response_time.percentile})
               </span>
-              <span className={cn('font-medium', compliance.response_time.is_compliant ? 'text-success' : 'text-destructive')}>
+              <span className="font-medium text-primary">
                 {formatMs(compliance.response_time.current_ms)} / {formatMs(compliance.response_time.target_ms)}
               </span>
             </div>
@@ -80,7 +77,7 @@ function SLACard({ sla, isSelected, onClick }: SLACardProps) {
           {compliance.error_rate && compliance.error_rate.target_percent > 0 && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Error Rate</span>
-              <span className={cn('font-medium', compliance.error_rate.is_compliant ? 'text-success' : 'text-destructive')}>
+              <span className="font-medium text-primary">
                 {formatPercent(compliance.error_rate.current_percent)} / {formatPercent(compliance.error_rate.target_percent)}
               </span>
             </div>

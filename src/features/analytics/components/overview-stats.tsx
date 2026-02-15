@@ -40,7 +40,7 @@ function OverviewStats({ data, isLoading }: OverviewStatsProps) {
               : 0
           )}
           icon={AlertTriangle}
-          iconClassName="bg-destructive/10 text-destructive"
+          iconClassName="bg-primary/10 text-primary"
         />
       </StaggerItem>
       <StaggerItem>
@@ -48,7 +48,7 @@ function OverviewStats({ data, isLoading }: OverviewStatsProps) {
           title="Avg Response Time"
           value={formatMs(data.summary.avg_response_time_ms)}
           icon={Clock}
-          iconClassName="bg-muted text-muted-foreground"
+          iconClassName="bg-primary/10 text-primary"
         />
       </StaggerItem>
       <StaggerItem>
@@ -56,7 +56,7 @@ function OverviewStats({ data, isLoading }: OverviewStatsProps) {
           title="Success Rate"
           value={formatPercent(data.summary.success_rate)}
           icon={CheckCircle}
-          iconClassName="bg-success/10 text-success"
+          iconClassName="bg-primary/10 text-primary"
         />
       </StaggerItem>
     </StaggerGroup>

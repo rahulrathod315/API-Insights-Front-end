@@ -27,7 +27,7 @@ function RankedList({
         <div key={item.country_code} className="flex items-center gap-3">
           <span
             className={cn(
-              'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white',
+              'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold',
               colorClass
             )}
           >
@@ -68,7 +68,7 @@ export function GeoPerformance({ fastest, slowest, highestErrors, isLoading }: G
             <RankedList
               items={fastest}
               valueRenderer={(item) => formatMs(item.avg_response_time_ms)}
-              colorClass="bg-success"
+              colorClass="bg-success text-success-foreground"
             />
           </TabsContent>
           <TabsContent value="slowest">
@@ -82,7 +82,7 @@ export function GeoPerformance({ fastest, slowest, highestErrors, isLoading }: G
             <RankedList
               items={highestErrors}
               valueRenderer={(item) => formatPercent(item.error_rate)}
-              colorClass="bg-destructive"
+              colorClass="bg-destructive text-destructive-foreground"
             />
           </TabsContent>
         </Tabs>

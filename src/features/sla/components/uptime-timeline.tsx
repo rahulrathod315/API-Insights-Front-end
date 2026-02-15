@@ -87,7 +87,7 @@ function UptimeTimeline({ projectId, slaId }: UptimeTimelineProps) {
                     className={cn(
                       'h-5 flex-1 rounded-sm transition-opacity hover:opacity-80',
                       entry.is_up
-                        ? 'bg-success'
+                        ? 'bg-primary'
                         : entry.request_count === 0
                           ? 'bg-muted-foreground/30'
                           : 'bg-destructive'
@@ -109,7 +109,7 @@ function UptimeTimeline({ projectId, slaId }: UptimeTimelineProps) {
 
           <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
-              <div className="h-3 w-3 rounded-sm bg-success" />
+              <div className="h-3 w-3 rounded-sm bg-primary" />
               <span>Up</span>
             </div>
             <div className="flex items-center gap-1">

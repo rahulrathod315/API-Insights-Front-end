@@ -16,7 +16,8 @@ import {
 } from '@/components/ui/card'
 import { ChartSkeleton } from '@/components/shared/loading-skeleton'
 import { useChartAnimation } from '@/lib/animation'
-import { formatMs } from '@/lib/utils/format'
+import { formatMs, formatTimestamp, formatFullDateTime } from '@/lib/utils/format'
+import { useTimezone } from '@/lib/hooks/use-timezone'
 import type { TimeSeriesPoint } from '../types'
 
 interface ResponseTimeChartProps {
@@ -27,24 +28,14 @@ interface ResponseTimeChartProps {
 
 const series = [
   { key: 'avg_response_time', label: 'Avg', color: 'var(--chart-1)', dash: undefined },
-  { key: 'p50_response_time', label: 'P50', color: 'var(--chart-5)', dash: undefined },
-  { key: 'p95_response_time', label: 'P95', color: 'var(--chart-2)', dash: '5 5' },
-  { key: 'p99_response_time', label: 'P99', color: 'var(--chart-3)', dash: '2 2' },
+  { key: 'p50_response_time', label: 'P50', color: 'var(--chart-2)', dash: undefined },
+  { key: 'p95_response_time', label: 'P95', color: 'var(--chart-3)', dash: '5 5' },
+  { key: 'p99_response_time', label: 'P99', color: 'var(--chart-4)', dash: '2 2' },
 ] as const
-
-function formatTimestamp(timestamp: string, days?: number): string {
-  const date = new Date(timestamp)
-  if (days && days <= 1) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-  if (days && days > 30) {
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
-  }
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
-}
 
 function ResponseTimeChart({ data, isLoading, days }: ResponseTimeChartProps) {
   const chartAnimation = useChartAnimation()
+  const tz = useTimezone()
   const [hiddenKeys, setHiddenKeys] = useState<string[]>([])
 
   const visibleSeries = useMemo(
@@ -113,7 +104,7 @@ function ResponseTimeChart({ data, isLoading, days }: ResponseTimeChartProps) {
                 />
                 <XAxis
                   dataKey="timestamp"
-                  tickFormatter={(ts: string) => formatTimestamp(ts, days)}
+                  tickFormatter={(ts: string) => formatTimestamp(ts, days, tz)}
                   className="text-xs fill-muted-foreground"
                   tickLine={false}
                   axisLine={false}
@@ -131,7 +122,7 @@ function ResponseTimeChart({ data, isLoading, days }: ResponseTimeChartProps) {
                     return (
                       <div className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
                         <p className="mb-1 font-medium">
-                          {new Date(label as string).toLocaleString()}
+                          {formatFullDateTime(label as string, tz)}
                         </p>
                         {payload.map((entry) => (
                           <p key={entry.dataKey as string} className="flex items-center gap-2">

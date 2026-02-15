@@ -9,7 +9,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
 import { cn } from '@/lib/utils/cn'
 import { format, subDays } from 'date-fns'
@@ -65,25 +65,24 @@ function ExportDialog({ open, onOpenChange, onExport }: ExportDialogProps) {
                 <Label htmlFor="export-start" className="text-xs text-muted-foreground">
                   Start Date
                 </Label>
-                <Input
+                <DatePicker
                   id="export-start"
-                  type="date"
                   value={startDate}
-                  max={endDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  onChange={(v) => setStartDate(v)}
+                  placeholder="Start date"
+                  className="w-full h-10"
                 />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="export-end" className="text-xs text-muted-foreground">
                   End Date
                 </Label>
-                <Input
+                <DatePicker
                   id="export-end"
-                  type="date"
                   value={endDate}
-                  min={startDate}
-                  max={today}
-                  onChange={(e) => setEndDate(e.target.value)}
+                  onChange={(v) => setEndDate(v)}
+                  placeholder="End date"
+                  className="w-full h-10"
                 />
               </div>
             </div>

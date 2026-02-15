@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { differenceInCalendarDays, isValid, parseISO } from 'date-fns'
 import { PageHeader } from '@/components/shared/page-header'
 import { useProjectContext } from '@/features/projects/project-context'
@@ -9,6 +8,7 @@ import {
   useTimeSeries,
   useErrorClusters,
 } from '../hooks'
+import { useAnalyticsParams } from '../analytics-params-context'
 import type { AnalyticsParams } from '../types'
 
 function normalizeParams(params: AnalyticsParams): AnalyticsParams {
@@ -31,7 +31,7 @@ function getGranularity(days?: number): 'hour' | 'day' | 'week' | 'month' {
 
 export default function ErrorAnalyticsPage() {
   const { project } = useProjectContext()
-  const [params, setParams] = useState<AnalyticsParams>({ days: 7 })
+  const { params, setParams } = useAnalyticsParams()
   const normalizedParams = normalizeParams(params)
   const projectId = String(project.id)
 

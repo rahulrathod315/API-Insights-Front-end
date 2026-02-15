@@ -27,11 +27,11 @@ interface Bucket {
 }
 
 const BUCKET_COLORS = [
-  'var(--chart-2)',   // Fast
-  'var(--chart-1)',   // Normal
-  'var(--chart-3)',   // Slow
-  'var(--chart-4)',   // Very Slow
-  'var(--chart-5)',   // Critical
+  'var(--chart-1)',   // Fast (<100ms) — Orange
+  'var(--chart-1)',   // Normal (100-500ms) — Orange
+  'var(--chart-1)',   // Slow (500ms-1s) — Orange
+  'var(--chart-1)',   // Very Slow (1-2s) — Orange
+  'var(--chart-1)',   // Critical (>2s) — Orange
 ]
 
 export function ResponseTimeDistribution({ data, isLoading }: ResponseTimeDistributionProps) {
@@ -52,7 +52,7 @@ export function ResponseTimeDistribution({ data, isLoading }: ResponseTimeDistri
       else counts[4] += weight
     }
 
-    const labels = ['Fast (<100ms)', 'Normal (100-500ms)', 'Slow (500ms-1s)', 'Very Slow (1-2s)', 'Critical (>2s)']
+    const labels = ['<100ms', '100-500ms', '500ms-1s', '1-2s', '>2s']
 
     return labels.map((label, i) => ({
       label,
@@ -85,28 +85,23 @@ export function ResponseTimeDistribution({ data, isLoading }: ResponseTimeDistri
         <CardTitle className="text-base">Response Time Distribution</CardTitle>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
+        <ResponsiveContainer width="100%" height={300}>
           <BarChart data={buckets}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="label"
               className="text-xs"
-              tick={{ fill: 'var(--muted-foreground)' }}
+              tick={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
               interval={0}
-              angle={-20}
-              textAnchor="end"
-              height={60}
+              tickLine={false}
+              axisLine={false}
             />
             <YAxis
               className="text-xs"
               tick={{ fill: 'var(--muted-foreground)' }}
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: 'var(--popover)',
-                border: '1px solid var(--border)',
-                borderRadius: '6px',
-              }}
+              cursor={false}
               content={({ active, payload }) => {
                 if (!active || !payload?.length) return null
                 const item = payload[0].payload as Bucket
@@ -120,7 +115,7 @@ export function ResponseTimeDistribution({ data, isLoading }: ResponseTimeDistri
             />
             <Bar dataKey="count" radius={[4, 4, 0, 0]} {...animation}>
               {buckets.map((bucket, i) => (
-                <Cell key={i} fill={bucket.color} />
+                <Cell key={i} fill={bucket.color} stroke="var(--background)" strokeWidth={2} />
               ))}
             </Bar>
           </BarChart>

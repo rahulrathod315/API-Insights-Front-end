@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select'
 import { useProjectContext } from '@/features/projects/project-context'
 import { useCreateAlert, useUpdateAlert } from '../hooks'
+import { Separator } from '@/components/ui/separator'
 import { Loader2 } from 'lucide-react'
 import type { Alert } from '../types'
 
@@ -39,6 +40,7 @@ const alertFormSchema = z.object({
   notify_on_trigger: z.boolean().optional(),
   notify_on_resolve: z.boolean().optional(),
   cooldown_minutes: z.number().min(0).optional(),
+  slack_webhook_url: z.string().url('Must be a valid URL').optional().or(z.literal('')),
 })
 
 type AlertFormValues = z.infer<typeof alertFormSchema>
@@ -91,6 +93,7 @@ function CreateAlertDialog({ open, onOpenChange, alert }: CreateAlertDialogProps
       notify_on_trigger: true,
       notify_on_resolve: true,
       cooldown_minutes: 15,
+      slack_webhook_url: '',
     },
   })
 
@@ -106,6 +109,7 @@ function CreateAlertDialog({ open, onOpenChange, alert }: CreateAlertDialogProps
         notify_on_trigger: alert.notify_on_trigger,
         notify_on_resolve: alert.notify_on_resolve,
         cooldown_minutes: alert.cooldown_minutes,
+        slack_webhook_url: alert.slack_webhook_url ?? '',
       })
     } else if (open && !alert) {
       reset({
@@ -118,6 +122,7 @@ function CreateAlertDialog({ open, onOpenChange, alert }: CreateAlertDialogProps
         notify_on_trigger: true,
         notify_on_resolve: true,
         cooldown_minutes: 15,
+        slack_webhook_url: '',
       })
     }
   }, [open, alert, reset])
@@ -133,6 +138,7 @@ function CreateAlertDialog({ open, onOpenChange, alert }: CreateAlertDialogProps
       notify_on_trigger: values.notify_on_trigger,
       notify_on_resolve: values.notify_on_resolve,
       cooldown_minutes: values.cooldown_minutes,
+      slack_webhook_url: values.slack_webhook_url || undefined,
     }
 
     if (isEditMode) {
@@ -263,6 +269,31 @@ function CreateAlertDialog({ open, onOpenChange, alert }: CreateAlertDialogProps
               placeholder="e.g., 5"
               {...register('evaluation_window_minutes', { valueAsNumber: true })}
             />
+          </div>
+
+          <Separator />
+
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-medium">Webhook Integration</p>
+              <p className="text-xs text-muted-foreground">
+                Send alert notifications to an external service via webhook.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="slack_webhook_url">
+                Webhook URL{' '}
+                <span className="text-muted-foreground">(optional)</span>
+              </Label>
+              <Input
+                id="slack_webhook_url"
+                placeholder="https://example.com/webhook/..."
+                {...register('slack_webhook_url')}
+              />
+              {errors.slack_webhook_url && (
+                <p className="text-sm text-destructive">{errors.slack_webhook_url.message}</p>
+              )}
+            </div>
           </div>
 
           <DialogFooter>

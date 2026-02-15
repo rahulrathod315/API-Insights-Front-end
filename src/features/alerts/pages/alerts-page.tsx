@@ -17,7 +17,7 @@ import {
 import { Plus, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Alert } from '../types'
 
-const DEFAULT_PAGE_SIZE = 20
+const DEFAULT_PAGE_SIZE = 10
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
 
 export default function AlertsPage() {

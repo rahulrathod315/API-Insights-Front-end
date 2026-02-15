@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils/cn'
 import { formatDate } from '@/lib/utils/format'
+import { useTimezone } from '@/lib/hooks/use-timezone'
 import type { Project } from '../types'
 
 interface ProjectCardProps {
@@ -22,6 +23,7 @@ const roleBadgeVariant: Record<Project['my_role'], 'default' | 'secondary' | 'ou
 
 function ProjectCard({ project, className }: ProjectCardProps) {
   const navigate = useNavigate()
+  const tz = useTimezone()
   const [copied, setCopied] = useState(false)
 
   const apiKeyDisplay = project.api_key
@@ -92,7 +94,7 @@ function ProjectCard({ project, className }: ProjectCardProps) {
           </div>
           <div className="ml-auto flex items-center gap-1">
             <Calendar className="h-3.5 w-3.5" />
-            <span>{formatDate(project.created_at)}</span>
+            <span>{formatDate(project.created_at, tz)}</span>
           </div>
         </div>
       </CardFooter>

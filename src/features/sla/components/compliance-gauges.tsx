@@ -35,15 +35,16 @@ function UptimeGauge({ uptime, target }: { uptime: number; target: number }) {
                   endAngle={-270}
                   paddingAngle={0}
                   dataKey="value"
+                  stroke="none"
                 >
-                  <Cell fill={isMeeting ? 'var(--chart-2)' : 'var(--chart-4)'} />
+                  <Cell fill="var(--chart-1)" />
                   <Cell fill="var(--muted)" />
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
           </div>
           <div>
-            <p className={cn('text-2xl font-bold', isMeeting ? 'text-success' : 'text-destructive')}>
+            <p className="text-2xl font-bold text-primary">
               {formatPercent(uptime)}
             </p>
             <p className="text-sm text-muted-foreground">Target: {formatPercent(target)}</p>
@@ -80,17 +81,14 @@ function MetricBar({
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-between">
-          <span className={cn('text-lg font-bold', isCompliant ? 'text-success' : 'text-destructive')}>
+          <span className="text-lg font-bold text-primary">
             {formatValue(current)}
           </span>
           <span className="text-sm text-muted-foreground">Target: {formatValue(target)}</span>
         </div>
         <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
           <div
-            className={cn(
-              'h-full rounded-full transition-all',
-              isCompliant ? 'bg-success' : 'bg-destructive'
-            )}
+            className="h-full rounded-full transition-all bg-primary"
             style={{ width: `${ratio}%` }}
           />
         </div>

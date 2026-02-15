@@ -9,7 +9,9 @@ import { DataTable } from '@/components/shared/data-table'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { TimeRangePicker } from '../components/time-range-picker'
 import { useDashboard } from '../hooks'
+import { useAnalyticsParams } from '../analytics-params-context'
 import { formatDate, formatNumber, formatPercent } from '@/lib/utils/format'
+import { useTimezone } from '@/lib/hooks/use-timezone'
 import type { AnalyticsParams, DashboardData } from '../types'
 import type { Column } from '@/components/shared/data-table'
 
@@ -30,8 +32,9 @@ type ProjectRow = DashboardData['projects'][number]
 const DEFAULT_PAGE_SIZE = 10
 
 export default function DashboardPage() {
-  const [params, setParams] = useState<AnalyticsParams>({ days: 7 })
+  const { params, setParams } = useAnalyticsParams()
   const normalizedParams = normalizeDashboardParams(params)
+  const tz = useTimezone()
   const [tablePage, setTablePage] = useState(1)
   const [tablePageSize, setTablePageSize] = useState(DEFAULT_PAGE_SIZE)
 
@@ -48,7 +51,7 @@ export default function DashboardPage() {
 
   const period = dashboard.data?.period
   const periodLabel = period?.start_date && period?.end_date
-    ? `${formatDate(period.start_date)} - ${formatDate(period.end_date)}`
+    ? `${formatDate(period.start_date, tz)} - ${formatDate(period.end_date, tz)}`
     : undefined
 
   const topActiveProjects = useMemo(() => (
@@ -148,7 +151,7 @@ export default function DashboardPage() {
             title="Projects Tracked"
             value={formatNumber(totals.projects)}
             icon={Layers}
-            iconClassName="bg-indigo-50 text-indigo-600 dark:bg-indigo-950 dark:text-indigo-400"
+            iconClassName="bg-primary/10 text-primary"
           />
         </StaggerItem>
         <StaggerItem>
@@ -156,7 +159,7 @@ export default function DashboardPage() {
             title="Total Requests"
             value={formatNumber(totals.total_requests)}
             icon={Activity}
-            iconClassName="bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400"
+            iconClassName="bg-primary/10 text-primary"
           />
         </StaggerItem>
         <StaggerItem>
@@ -164,7 +167,7 @@ export default function DashboardPage() {
             title="Total Errors"
             value={formatNumber(totals.total_errors)}
             icon={AlertTriangle}
-            iconClassName="bg-rose-50 text-rose-600 dark:bg-rose-950 dark:text-rose-400"
+            iconClassName="bg-primary/10 text-primary"
           />
         </StaggerItem>
         <StaggerItem>
@@ -172,7 +175,7 @@ export default function DashboardPage() {
             title="Error Rate"
             value={formatPercent(totals.error_rate)}
             icon={Percent}
-            iconClassName="bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400"
+            iconClassName="bg-primary/10 text-primary"
           />
         </StaggerItem>
       </StaggerGroup>

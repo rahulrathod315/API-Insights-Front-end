@@ -9,7 +9,7 @@ import { AuditLogTable } from '../components/audit-log-table'
 import { ScrollText } from 'lucide-react'
 import type { AuditLogFilters } from '../types'
 
-const DEFAULT_PAGE_SIZE = 20
+const DEFAULT_PAGE_SIZE = 10
 
 export default function AuditLogsPage() {
   const { project } = useProjectContext()
@@ -69,6 +69,13 @@ export default function AuditLogsPage() {
     [filters, handleFiltersChange]
   )
 
+  const handlePageSizeChange = useCallback(
+    (pageSize: number) => {
+      handleFiltersChange({ ...filters, page: 1, page_size: pageSize })
+    },
+    [filters, handleFiltersChange]
+  )
+
   const logs = data?.results ?? []
   const totalCount = data?.pagination?.count ?? 0
   const hasNoResults = !isLoading && logs.length === 0
@@ -115,6 +122,7 @@ export default function AuditLogsPage() {
             total: totalCount,
           }}
           onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
           isLoading={isLoading}
         />
       )}

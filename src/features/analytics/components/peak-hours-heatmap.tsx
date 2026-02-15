@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartSkeleton } from '@/components/shared/loading-skeleton'
 import { cn } from '@/lib/utils/cn'
+import { useTimezone } from '@/lib/hooks/use-timezone'
 import type { TimeSeriesPoint } from '../types'
 
 interface PeakHoursHeatmapProps {
@@ -14,16 +15,22 @@ const HOURS = Array.from({ length: 24 }, (_, i) => i)
 
 export function PeakHoursHeatmap({ data, isLoading }: PeakHoursHeatmapProps) {
   const [tooltip, setTooltip] = useState<{ day: string; hour: number; count: number; x: number; y: number } | null>(null)
+  const tz = useTimezone()
 
   const { grid, maxCount } = useMemo(() => {
     // 7 days × 24 hours
     const grid: number[][] = Array.from({ length: 7 }, () => Array(24).fill(0))
+    const dayFmt = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: tz })
+    const hourFmt = new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: false, timeZone: tz })
 
     for (const point of data) {
       const d = new Date(point.timestamp)
-      const dayOfWeek = d.getDay() // 0=Sun
-      const hour = d.getHours()
-      grid[dayOfWeek][hour] += point.request_count
+      const dayStr = dayFmt.format(d)
+      const dayOfWeek = DAYS.indexOf(dayStr)
+      const hour = Number(hourFmt.format(d))
+      if (dayOfWeek >= 0 && hour >= 0 && hour < 24) {
+        grid[dayOfWeek][hour] += point.request_count
+      }
     }
 
     let maxCount = 1
@@ -34,7 +41,7 @@ export function PeakHoursHeatmap({ data, isLoading }: PeakHoursHeatmapProps) {
     }
 
     return { grid, maxCount }
-  }, [data])
+  }, [data, tz])
 
   function getOpacity(count: number): number {
     if (count === 0) return 0.05
@@ -94,7 +101,7 @@ export function PeakHoursHeatmap({ data, isLoading }: PeakHoursHeatmapProps) {
                       key={hour}
                       className={cn('m-px aspect-square flex-1 rounded-sm')}
                       style={{
-                        backgroundColor: `var(--chart-1)`,
+                        backgroundColor: `var(--primary)`,
                         opacity: getOpacity(count),
                       }}
                       onMouseEnter={(e) => {
@@ -124,7 +131,7 @@ export function PeakHoursHeatmap({ data, isLoading }: PeakHoursHeatmapProps) {
                   key={opacity}
                   className="h-3 w-3 rounded-sm"
                   style={{
-                    backgroundColor: `var(--chart-1)`,
+                    backgroundColor: `var(--primary)`,
                     opacity,
                   }}
                 />

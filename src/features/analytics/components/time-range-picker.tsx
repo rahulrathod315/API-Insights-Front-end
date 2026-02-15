@@ -8,9 +8,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Input } from '@/components/ui/input'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
-import { cn } from '@/lib/utils/cn'
 import type { AnalyticsParams } from '../types'
 
 interface TimeRangePickerProps {
@@ -85,24 +84,24 @@ function TimeRangePicker({ value, onChange }: TimeRangePickerProps) {
             <Label htmlFor="start-date" className="text-xs">
               Start
             </Label>
-            <Input
+            <DatePicker
               id="start-date"
-              type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className={cn('h-9 w-[140px]')}
+              onChange={(v) => setStartDate(v)}
+              placeholder="Start date"
+              className="w-[160px] h-10"
             />
           </div>
           <div className="space-y-1">
             <Label htmlFor="end-date" className="text-xs">
               End
             </Label>
-            <Input
+            <DatePicker
               id="end-date"
-              type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className={cn('h-9 w-[140px]')}
+              onChange={(v) => setEndDate(v)}
+              placeholder="End date"
+              className="w-[160px] h-10"
             />
           </div>
           <Button

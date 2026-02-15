@@ -2,6 +2,13 @@ import { Fragment, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -15,13 +22,13 @@ import type { Column, PaginationConfig } from '@/components/shared/data-table'
 import type { AuditLog } from '../types'
 
 const ACTION_BADGE_STYLES: Record<string, string> = {
-  create: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  update: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-  delete: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  invite: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-  remove: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-  enable: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
-  disable: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+  create: 'bg-primary/10 text-primary',
+  update: 'bg-primary/15 text-primary',
+  delete: 'bg-primary/20 text-primary',
+  invite: 'bg-primary/10 text-primary',
+  remove: 'bg-primary/15 text-primary',
+  enable: 'bg-primary/10 text-primary',
+  disable: 'bg-muted text-muted-foreground',
 }
 
 function getActionBadgeClass(action: string): string {
@@ -51,10 +58,13 @@ function ChangesDetail({ changes }: { changes: AuditLog['changes'] }) {
   )
 }
 
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
+
 interface AuditLogTableProps {
   logs: AuditLog[]
   pagination?: PaginationConfig
   onPageChange?: (page: number) => void
+  onPageSizeChange?: (pageSize: number) => void
   isLoading?: boolean
 }
 
@@ -62,6 +72,7 @@ function AuditLogTable({
   logs,
   pagination,
   onPageChange,
+  onPageSizeChange,
   isLoading = false,
 }: AuditLogTableProps) {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
@@ -243,38 +254,62 @@ function AuditLogTable({
         </table>
       </div>
 
-      {pagination && Math.ceil(pagination.total / pagination.pageSize) > 1 && (
-        <div className="flex items-center justify-between px-4 py-4">
-          <p className="text-sm text-muted-foreground">
-            Showing{' '}
-            {(pagination.page - 1) * pagination.pageSize + 1} to{' '}
-            {Math.min(pagination.page * pagination.pageSize, pagination.total)}{' '}
-            of {pagination.total} results
-          </p>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              disabled={pagination.page <= 1}
-              onClick={() => onPageChange?.(pagination.page - 1)}
-            >
-              <ChevronLeft className="h-4 w-4" />
-              <span className="sr-only">Previous page</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              className="h-8 w-8"
-              disabled={
-                pagination.page >= Math.ceil(pagination.total / pagination.pageSize)
-              }
-              onClick={() => onPageChange?.(pagination.page + 1)}
-            >
-              <ChevronRight className="h-4 w-4" />
-              <span className="sr-only">Next page</span>
-            </Button>
+      {pagination && (
+        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-4">
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-muted-foreground">
+              Showing{' '}
+              {(pagination.page - 1) * pagination.pageSize + 1} to{' '}
+              {Math.min(pagination.page * pagination.pageSize, pagination.total)}{' '}
+              of {pagination.total} results
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Rows:</span>
+              <Select
+                value={String(pagination.pageSize)}
+                onValueChange={(value) => {
+                  onPageSizeChange?.(Number(value))
+                }}
+              >
+                <SelectTrigger className="h-8 w-[70px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZE_OPTIONS.map((size) => (
+                    <SelectItem key={size} value={String(size)}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          {Math.ceil(pagination.total / pagination.pageSize) > 1 && (
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                disabled={pagination.page <= 1}
+                onClick={() => onPageChange?.(pagination.page - 1)}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="sr-only">Previous page</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8"
+                disabled={
+                  pagination.page >= Math.ceil(pagination.total / pagination.pageSize)
+                }
+                onClick={() => onPageChange?.(pagination.page + 1)}
+              >
+                <ChevronRight className="h-4 w-4" />
+                <span className="sr-only">Next page</span>
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </div>

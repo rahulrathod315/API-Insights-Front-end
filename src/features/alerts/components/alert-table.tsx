@@ -134,7 +134,7 @@ function AlertTable({ alerts, isLoading, onEdit, onViewHistory }: AlertTableProp
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      className="h-8 w-8 text-primary hover:text-primary"
                       onClick={(e) => {
                         e.stopPropagation()
                         setDeleteTarget(alert)

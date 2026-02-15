@@ -17,7 +17,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { ChartSkeleton } from '@/components/shared/loading-skeleton'
 import { useChartAnimation } from '@/lib/animation'
-import { formatNumber } from '@/lib/utils/format'
+import { formatNumber, formatTimestamp, formatFullDateTime } from '@/lib/utils/format'
+import { useTimezone } from '@/lib/hooks/use-timezone'
 import type { TimeSeriesPoint } from '../types'
 
 interface RequestVolumeChartProps {
@@ -28,23 +29,13 @@ interface RequestVolumeChartProps {
 
 const metrics = [
   { key: 'request_count', label: 'Total', color: 'var(--chart-1)' },
-  { key: 'success_count', label: 'Success', color: 'var(--chart-2)' },
-  { key: 'error_count', label: 'Errors', color: 'var(--chart-4)' },
+  { key: 'success_count', label: 'Success', color: 'var(--chart-1)' },
+  { key: 'error_count', label: 'Errors', color: 'var(--chart-1)' },
 ] as const
-
-function formatTimestamp(timestamp: string, days?: number): string {
-  const date = new Date(timestamp)
-  if (days && days <= 1) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-  if (days && days > 30) {
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
-  }
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
-}
 
 function RequestVolumeChart({ data, isLoading, days }: RequestVolumeChartProps) {
   const chartAnimation = useChartAnimation()
+  const tz = useTimezone()
   const [metricKey, setMetricKey] = useState<(typeof metrics)[number]['key']>(
     'request_count'
   )
@@ -55,7 +46,7 @@ function RequestVolumeChart({ data, isLoading, days }: RequestVolumeChartProps) 
 
   const activeMetric =
     metrics.find((metric) => metric.key === metricKey) ?? metrics[0]
-  const gradientId = `volume-gradient-${activeMetric.key}`
+  const gradientId = 'volume-gradient'
 
   return (
     <Card>
@@ -69,9 +60,9 @@ function RequestVolumeChart({ data, isLoading, days }: RequestVolumeChartProps) 
               <Button
                 key={metric.key}
                 type="button"
-                variant={metric.key === metricKey ? 'secondary' : 'outline'}
+                variant={metric.key === metricKey ? 'outline' : 'outline'}
                 size="sm"
-                className="h-7 px-2 text-xs"
+                className={`h-7 px-2 text-xs ${metric.key === metricKey ? 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 hover:text-primary' : ''}`}
                 onClick={() => setMetricKey(metric.key)}
               >
                 {metric.label}
@@ -112,7 +103,7 @@ function RequestVolumeChart({ data, isLoading, days }: RequestVolumeChartProps) 
                 />
                 <XAxis
                   dataKey="timestamp"
-                  tickFormatter={(ts: string) => formatTimestamp(ts, days)}
+                  tickFormatter={(ts: string) => formatTimestamp(ts, days, tz)}
                   className="text-xs fill-muted-foreground"
                   tickLine={false}
                   axisLine={false}
@@ -130,7 +121,7 @@ function RequestVolumeChart({ data, isLoading, days }: RequestVolumeChartProps) 
                     return (
                       <div className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
                         <p className="mb-1 font-medium">
-                          {new Date(label as string).toLocaleString()}
+                          {formatFullDateTime(label as string, tz)}
                         </p>
                         <p>
                           {activeMetric.label}:{' '}

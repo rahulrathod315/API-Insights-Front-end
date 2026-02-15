@@ -40,6 +40,9 @@ const DashboardLayout = lazy(() => import('@/components/layout/dashboard-layout'
 // Project context wrapper
 const ProjectContextWrapper = lazy(() => import('@/features/projects/project-context').then(m => ({ default: m.ProjectProvider })))
 
+// Analytics params wrapper
+const AnalyticsParamsWrapper = lazy(() => import('@/features/analytics/analytics-params-context').then(m => ({ default: m.AnalyticsParamsProvider })))
+
 function PageLoader() {
   return (
     <AnimateIn variant="fadeIn" duration={0.2} delay={0.15}>
@@ -95,7 +98,9 @@ export function AppRouter() {
             <ProtectedRoute>
               <Suspense fallback={<PageLoader />}>
                 <ProjectContextWrapper>
-                  <DashboardLayout />
+                  <AnalyticsParamsWrapper>
+                    <DashboardLayout />
+                  </AnalyticsParamsWrapper>
                 </ProjectContextWrapper>
               </Suspense>
             </ProtectedRoute>

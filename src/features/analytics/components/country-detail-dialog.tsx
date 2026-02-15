@@ -19,6 +19,7 @@ import type { Column } from '@/components/shared/data-table'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useChartAnimation } from '@/lib/animation'
 import { formatNumber, formatMs, formatPercent, formatDate } from '@/lib/utils/format'
+import { useTimezone } from '@/lib/hooks/use-timezone'
 import { useProjectContext } from '@/features/projects/project-context'
 import { useCountryDetail } from '../hooks'
 import type { AnalyticsParams, CountryDetailResponse } from '../types'
@@ -50,6 +51,7 @@ export function CountryDetailDialog({ countryCode, open, onOpenChange, params }:
   const { project } = useProjectContext()
   const { data, isLoading } = useCountryDetail(String(project.id), countryCode, params)
   const animation = useChartAnimation()
+  const tz = useTimezone()
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -91,7 +93,7 @@ export function CountryDetailDialog({ countryCode, open, onOpenChange, params }:
                     <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                     <XAxis
                       dataKey="date"
-                      tickFormatter={(v) => formatDate(v)}
+                      tickFormatter={(v) => formatDate(v, tz)}
                       className="text-xs"
                       tick={{ fill: 'var(--muted-foreground)' }}
                     />
@@ -105,7 +107,7 @@ export function CountryDetailDialog({ countryCode, open, onOpenChange, params }:
                         border: '1px solid var(--border)',
                         borderRadius: '6px',
                       }}
-                      labelFormatter={(v) => formatDate(v as string)}
+                      labelFormatter={(v) => formatDate(v as string, tz)}
                     />
                     <Area
                       type="monotone"
@@ -120,8 +122,8 @@ export function CountryDetailDialog({ countryCode, open, onOpenChange, params }:
                       type="monotone"
                       dataKey="error_count"
                       name="Errors"
-                      fill="var(--chart-4)"
-                      stroke="var(--chart-4)"
+                      fill="var(--chart-3)"
+                      stroke="var(--chart-3)"
                       fillOpacity={0.3}
                       {...animation}
                     />

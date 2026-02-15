@@ -17,7 +17,7 @@ import { MembersTable } from '../components/members-table'
 import { InviteMemberDialog } from '../components/invite-member-dialog'
 import { TransferOwnershipDialog } from '../components/transfer-ownership-dialog'
 
-const DEFAULT_PAGE_SIZE = 20
+const DEFAULT_PAGE_SIZE = 10
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
 
 export default function TeamPage() {

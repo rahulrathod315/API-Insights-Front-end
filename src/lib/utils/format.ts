@@ -1,13 +1,13 @@
-import { format, formatDistanceToNow, parseISO } from 'date-fns'
+import { formatDistanceToNow, parseISO } from 'date-fns'
 
-export function formatDate(date: string | Date): string {
+export function formatDate(date: string | Date, tz?: string): string {
   const d = typeof date === 'string' ? parseISO(date) : date
-  return format(d, 'MMM d, yyyy')
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: tz || undefined })
 }
 
-export function formatDateTime(date: string | Date): string {
+export function formatDateTime(date: string | Date, tz?: string): string {
   const d = typeof date === 'string' ? parseISO(date) : date
-  return format(d, 'MMM d, yyyy HH:mm')
+  return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: tz || undefined })
 }
 
 export function formatRelativeTime(date: string | Date): string {
@@ -28,6 +28,18 @@ export function formatMs(ms: number): string {
 
 export function formatPercent(value: number): string {
   return `${value.toFixed(1)}%`
+}
+
+export function formatTimestamp(timestamp: string, days?: number, tz?: string): string {
+  const date = new Date(timestamp)
+  if (days && days <= 1) {
+    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: tz || undefined })
+  }
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: tz || undefined })
+}
+
+export function formatFullDateTime(timestamp: string, tz?: string): string {
+  return new Date(timestamp).toLocaleString('en-US', { timeZone: tz || undefined })
 }
 
 export function formatBytes(bytes: number): string {

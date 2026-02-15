@@ -14,6 +14,7 @@ import { TableSkeleton } from '@/components/shared/loading-skeleton'
 import { EmptyState } from '@/components/shared/empty-state'
 import { cn } from '@/lib/utils/cn'
 import { formatDate } from '@/lib/utils/format'
+import { useTimezone } from '@/lib/hooks/use-timezone'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useProjectContext } from '@/features/projects/project-context'
 import { useUpdateMemberRole, useRemoveMember } from '../hooks'
@@ -50,6 +51,7 @@ function canRemoveMember(
 
 function MembersTable({ members, isLoading, currentUserRole }: MembersTableProps) {
   const { user } = useAuth()
+  const tz = useTimezone()
   const { project } = useProjectContext()
   const updateRoleMutation = useUpdateMemberRole()
   const removeMemberMutation = useRemoveMember()
@@ -162,14 +164,14 @@ function MembersTable({ members, isLoading, currentUserRole }: MembersTableProps
                     )}
                   </td>
                   <td className="p-4 align-middle text-sm text-muted-foreground">
-                    {formatDate(member.created_at)}
+                    {formatDate(member.created_at, tz)}
                   </td>
                   <td className="p-4 align-middle text-right">
                     {showRemove && (
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        className="h-8 w-8 text-muted-foreground hover:text-primary"
                         onClick={() => setMemberToRemove(member)}
                       >
                         <Trash2 className="h-4 w-4" />

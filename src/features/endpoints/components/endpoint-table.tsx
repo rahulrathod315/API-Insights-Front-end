@@ -20,17 +20,17 @@ import { BarChart3, Pencil, Trash2, Search, Unplug, ChevronLeft, ChevronRight } 
 import type { Endpoint } from '../types'
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const
-const DEFAULT_PAGE_SIZE = 20
+const DEFAULT_PAGE_SIZE = 10
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
 
 const METHOD_COLORS: Record<string, string> = {
-  GET: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-  POST: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-  PUT: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-  PATCH: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-  DELETE: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-  HEAD: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-  OPTIONS: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+  GET: 'bg-primary/10 text-primary',
+  POST: 'bg-primary/15 text-primary',
+  PUT: 'bg-primary/10 text-primary',
+  PATCH: 'bg-primary/10 text-primary',
+  DELETE: 'bg-primary/10 text-primary',
+  HEAD: 'bg-primary/10 text-primary',
+  OPTIONS: 'bg-muted text-muted-foreground',
 }
 
 interface EndpointTableProps {
@@ -212,7 +212,7 @@ function EndpointTable({ projectId, onEdit }: EndpointTableProps) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          className="h-8 w-8 text-primary hover:text-primary"
                           onClick={() => setDeleteTarget(row)}
                           title="Delete endpoint"
                         >

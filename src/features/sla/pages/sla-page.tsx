@@ -83,19 +83,19 @@ function SlaPage() {
             title="Total SLAs"
             value={dashboard.total_slas}
             icon={Shield}
-            iconClassName="bg-blue-100 text-blue-600"
+            iconClassName="bg-primary/10 text-primary"
           />
           <StatCard
             title="Meeting SLA"
             value={dashboard.meeting_sla}
             icon={CheckCircle}
-            iconClassName="bg-green-100 text-green-600"
+            iconClassName="bg-primary/10 text-primary"
           />
           <StatCard
             title="Breaching SLA"
             value={dashboard.breaching_sla}
             icon={XCircle}
-            iconClassName="bg-red-100 text-red-600"
+            iconClassName="bg-primary/10 text-primary"
           />
         </div>
       ) : null}
@@ -110,13 +110,14 @@ function SlaPage() {
       ) : dashboard && dashboard.slas.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {dashboard.slas.map((sla) => (
-            <div key={sla.id} className="relative">
+            <div key={sla.id} className="group relative">
               <SLACard
                 sla={sla}
                 isSelected={selectedSlaId === sla.id}
                 onClick={() => setSelectedSlaId(selectedSlaId === sla.id ? null : sla.id)}
               />
-              <div className="absolute right-2 top-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100 hover:opacity-100"
+              <div
+                className="absolute right-3 top-3 flex gap-1 rounded-md bg-card/90 p-0.5 opacity-0 shadow-sm backdrop-blur-sm transition-opacity group-hover:opacity-100"
                 style={{ opacity: selectedSlaId === sla.id ? 1 : undefined }}
               >
                 <Button
@@ -130,7 +131,7 @@ function SlaPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-destructive hover:text-destructive"
+                  className="h-7 w-7 text-primary hover:text-primary"
                   onClick={(e) => { e.stopPropagation(); handleDeleteClick(sla.id) }}
                 >
                   <Trash2 className="h-3.5 w-3.5" />

@@ -19,6 +19,7 @@ export interface Alert {
   last_evaluated_at: string | null
   created_at: string
   endpoint: { id: number; path: string; method: string } | null
+  slack_webhook_url: string | null
 }
 
 export interface AlertHistory {
@@ -42,6 +43,7 @@ export interface CreateAlertRequest {
   notify_on_resolve?: boolean
   cooldown_minutes?: number
   endpoint_id?: number
+  slack_webhook_url?: string
 }
 
 export interface UpdateAlertRequest {
@@ -56,4 +58,5 @@ export interface UpdateAlertRequest {
   notify_on_resolve?: boolean
   cooldown_minutes?: number
   endpoint_id?: number | null
+  slack_webhook_url?: string | null
 }

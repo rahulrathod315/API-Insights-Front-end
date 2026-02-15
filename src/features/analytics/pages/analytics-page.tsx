@@ -15,6 +15,7 @@ import {
   useSummary,
   useTimeSeries,
 } from '../hooks'
+import { useAnalyticsParams } from '../analytics-params-context'
 import { exportData } from '../api'
 import { formatNumber, formatMs, formatPercent } from '@/lib/utils/format'
 import type { AnalyticsParams, ExportParams } from '../types'
@@ -39,7 +40,7 @@ function getGranularity(days?: number): 'hour' | 'day' | 'week' | 'month' {
 
 export default function AnalyticsPage() {
   const { project } = useProjectContext()
-  const [params, setParams] = useState<AnalyticsParams>({ days: 7 })
+  const { params, setParams } = useAnalyticsParams()
   const [exportDialogOpen, setExportDialogOpen] = useState(false)
 
   const normalizedParams = normalizeAnalyticsParams(params)
@@ -125,7 +126,7 @@ export default function AnalyticsPage() {
                   : 0
               )}
               icon={AlertTriangle}
-              iconClassName="bg-destructive/10 text-destructive"
+              iconClassName="bg-primary/10 text-primary"
             />
           </StaggerItem>
           <StaggerItem>
@@ -133,7 +134,7 @@ export default function AnalyticsPage() {
               title="Avg Latency"
               value={formatMs(s?.avg_response_time_ms ?? 0)}
               icon={Clock}
-              iconClassName="bg-chart-3/10 text-chart-3"
+              iconClassName="bg-primary/10 text-primary"
             />
           </StaggerItem>
           <StaggerItem>
@@ -141,7 +142,7 @@ export default function AnalyticsPage() {
               title="Success Rate"
               value={formatPercent(s?.success_rate ?? 0)}
               icon={CheckCircle}
-              iconClassName="bg-success/10 text-success"
+              iconClassName="bg-primary/10 text-primary"
             />
           </StaggerItem>
         </StaggerGroup>

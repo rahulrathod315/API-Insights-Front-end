@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartSkeleton } from '@/components/shared/loading-skeleton'
 import { useChartAnimation } from '@/lib/animation'
 import { formatDateTime } from '@/lib/utils/format'
+import { useTimezone } from '@/lib/hooks/use-timezone'
 import type { GeoTimeSeriesPoint } from '../types'
 
 const COLORS = [
@@ -21,7 +22,7 @@ const COLORS = [
   'var(--chart-3)',
   'var(--chart-4)',
   'var(--chart-5)',
-]
+] as const
 
 interface GeoTimeSeriesChartProps {
   data: GeoTimeSeriesPoint[]
@@ -30,6 +31,7 @@ interface GeoTimeSeriesChartProps {
 
 export function GeoTimeSeriesChart({ data, isLoading }: GeoTimeSeriesChartProps) {
   const animation = useChartAnimation()
+  const tz = useTimezone()
 
   const { chartData, top5 } = useMemo(() => {
     // Sum request_count per country across all timestamps
@@ -94,7 +96,7 @@ export function GeoTimeSeriesChart({ data, isLoading }: GeoTimeSeriesChartProps)
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="timestamp"
-              tickFormatter={(v) => formatDateTime(v)}
+              tickFormatter={(v) => formatDateTime(v, tz)}
               className="text-xs"
               tick={{ fill: 'var(--muted-foreground)' }}
             />
@@ -108,7 +110,7 @@ export function GeoTimeSeriesChart({ data, isLoading }: GeoTimeSeriesChartProps)
                 border: '1px solid var(--border)',
                 borderRadius: '6px',
               }}
-              labelFormatter={(v) => formatDateTime(v as string)}
+              labelFormatter={(v) => formatDateTime(v as string, tz)}
             />
             <Legend />
             {top5.map((country, i) => (
@@ -119,8 +121,9 @@ export function GeoTimeSeriesChart({ data, isLoading }: GeoTimeSeriesChartProps)
                 name={country.name}
                 stackId="1"
                 fill={COLORS[i]}
-                stroke={COLORS[i]}
-                fillOpacity={0.6}
+                stroke="var(--background)"
+                strokeWidth={2}
+                fillOpacity={0.8}
                 {...animation}
               />
             ))}

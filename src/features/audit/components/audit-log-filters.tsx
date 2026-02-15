@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { DatePicker } from '@/components/ui/date-picker'
 import {
   Select,
   SelectContent,
@@ -58,18 +58,18 @@ function AuditLogFiltersBar({ filters, onFiltersChange }: AuditLogFiltersProps) 
     })
   }
 
-  function handleDateFromChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleDateFromChange(value: string) {
     onFiltersChange({
       ...filters,
-      date_from: e.target.value || undefined,
+      date_from: value || undefined,
       page: 1,
     })
   }
 
-  function handleDateToChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleDateToChange(value: string) {
     onFiltersChange({
       ...filters,
-      date_to: e.target.value || undefined,
+      date_to: value || undefined,
       page: 1,
     })
   }
@@ -124,24 +124,22 @@ function AuditLogFiltersBar({ filters, onFiltersChange }: AuditLogFiltersProps) 
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="date-from-filter">From date</Label>
-        <Input
-          id="date-from-filter"
-          type="date"
-          className="w-[160px]"
-          value={filters.date_from ?? ''}
+        <Label>From date</Label>
+        <DatePicker
+          value={filters.date_from}
           onChange={handleDateFromChange}
+          placeholder="Start date"
+          className="w-[180px] h-10"
         />
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="date-to-filter">To date</Label>
-        <Input
-          id="date-to-filter"
-          type="date"
-          className="w-[160px]"
-          value={filters.date_to ?? ''}
+        <Label>To date</Label>
+        <DatePicker
+          value={filters.date_to}
           onChange={handleDateToChange}
+          placeholder="End date"
+          className="w-[180px] h-10"
         />
       </div>
 

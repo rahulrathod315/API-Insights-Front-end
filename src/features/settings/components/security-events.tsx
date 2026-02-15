@@ -3,11 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDateTime } from '@/lib/utils/format'
+import { useTimezone } from '@/lib/hooks/use-timezone'
 import { getSecurityEvents, resendVerificationEmail } from '../api'
 import type { SecurityEvents as SecurityEventsType } from '../types'
 import { isAxiosError } from 'axios'
 
 export function SecurityEvents() {
+  const tz = useTimezone()
   const [data, setData] = useState<SecurityEventsType | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [resendStatus, setResendStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
@@ -61,14 +63,14 @@ export function SecurityEvents() {
               <div className="rounded-lg border p-4 space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Last Login</p>
                 <p className="text-sm">
-                  {data.last_login ? formatDateTime(data.last_login) : 'Never'}
+                  {data.last_login ? formatDateTime(data.last_login, tz) : 'Never'}
                 </p>
               </div>
 
               <div className="rounded-lg border p-4 space-y-1">
                 <p className="text-sm font-medium text-muted-foreground">Last Password Change</p>
                 <p className="text-sm">
-                  {data.last_password_change_at ? formatDateTime(data.last_password_change_at) : 'Never'}
+                  {data.last_password_change_at ? formatDateTime(data.last_password_change_at, tz) : 'Never'}
                 </p>
               </div>
 
@@ -80,7 +82,7 @@ export function SecurityEvents() {
                   </Badge>
                   {data.last_email_verification_at && (
                     <span className="text-xs text-muted-foreground">
-                      {formatDateTime(data.last_email_verification_at)}
+                      {formatDateTime(data.last_email_verification_at, tz)}
                     </span>
                   )}
                 </div>
@@ -115,7 +117,7 @@ export function SecurityEvents() {
                   </Badge>
                   {data.two_factor_verified_at && (
                     <span className="text-xs text-muted-foreground">
-                      {formatDateTime(data.two_factor_verified_at)}
+                      {formatDateTime(data.two_factor_verified_at, tz)}
                     </span>
                   )}
                 </div>
@@ -136,7 +138,7 @@ export function SecurityEvents() {
                   <p className="text-sm font-medium text-destructive">Account Locked</p>
                   <p className="text-sm text-muted-foreground">
                     {data.locked_until
-                      ? `Locked until ${formatDateTime(data.locked_until)}`
+                      ? `Locked until ${formatDateTime(data.locked_until, tz)}`
                       : 'Account is currently locked.'}
                   </p>
                 </div>

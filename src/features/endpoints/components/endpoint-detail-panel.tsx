@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils/cn'
 import { formatDate, formatNumber } from '@/lib/utils/format'
+import { useTimezone } from '@/lib/hooks/use-timezone'
 import {
   X,
   BarChart3,
@@ -16,13 +17,13 @@ import { useProjectContext } from '@/features/projects/project-context'
 import type { Endpoint } from '../types'
 
 const METHOD_COLORS: Record<string, string> = {
-  GET: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-  POST: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-  PUT: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-  PATCH: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
-  DELETE: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-  HEAD: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-  OPTIONS: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+  GET: 'bg-primary/10 text-primary',
+  POST: 'bg-primary/15 text-primary',
+  PUT: 'bg-primary/10 text-primary',
+  PATCH: 'bg-primary/10 text-primary',
+  DELETE: 'bg-primary/10 text-primary',
+  HEAD: 'bg-primary/10 text-primary',
+  OPTIONS: 'bg-muted text-muted-foreground',
 }
 
 interface EndpointDetailPanelProps {
@@ -39,6 +40,7 @@ function EndpointDetailPanel({
   onDelete,
 }: EndpointDetailPanelProps) {
   const { project } = useProjectContext()
+  const tz = useTimezone()
 
   return (
     <div className="flex h-full flex-col border-l bg-background">
@@ -92,11 +94,11 @@ function EndpointDetailPanel({
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Created</span>
-              <span className="text-sm">{formatDate(endpoint.created_at)}</span>
+              <span className="text-sm">{formatDate(endpoint.created_at, tz)}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Updated</span>
-              <span className="text-sm">{formatDate(endpoint.updated_at)}</span>
+              <span className="text-sm">{formatDate(endpoint.updated_at, tz)}</span>
             </div>
           </div>
 
@@ -141,7 +143,7 @@ function EndpointDetailPanel({
             </Button>
             <Button
               variant="outline"
-              className="w-full justify-start text-destructive hover:text-destructive"
+              className="w-full justify-start text-primary hover:text-primary"
               onClick={() => onDelete(endpoint)}
             >
               <Trash2 className="mr-2 h-4 w-4" />

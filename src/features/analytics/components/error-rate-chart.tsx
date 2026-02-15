@@ -17,7 +17,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { ChartSkeleton } from '@/components/shared/loading-skeleton'
 import { useChartAnimation } from '@/lib/animation'
-import { formatNumber, formatPercent } from '@/lib/utils/format'
+import { formatNumber, formatPercent, formatTimestamp, formatFullDateTime } from '@/lib/utils/format'
+import { useTimezone } from '@/lib/hooks/use-timezone'
 import type { TimeSeriesPoint } from '../types'
 
 interface ErrorRateChartProps {
@@ -26,19 +27,9 @@ interface ErrorRateChartProps {
   days?: number
 }
 
-function formatTimestamp(timestamp: string, days?: number): string {
-  const date = new Date(timestamp)
-  if (days && days <= 1) {
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-  }
-  if (days && days > 30) {
-    return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
-  }
-  return date.toLocaleDateString([], { month: 'short', day: 'numeric' })
-}
-
 function ErrorRateChart({ data, isLoading, days }: ErrorRateChartProps) {
   const chartAnimation = useChartAnimation()
+  const tz = useTimezone()
   const [mode, setMode] = useState<'count' | 'rate'>('count')
 
   if (isLoading) {
@@ -59,18 +50,18 @@ function ErrorRateChart({ data, isLoading, days }: ErrorRateChartProps) {
           <div className="flex items-center gap-2">
             <Button
               type="button"
-              variant={mode === 'count' ? 'secondary' : 'outline'}
+              variant="outline"
               size="sm"
-              className="h-7 px-2 text-xs"
+              className={`h-7 px-2 text-xs ${mode === 'count' ? 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 hover:text-primary' : ''}`}
               onClick={() => setMode('count')}
             >
               Count
             </Button>
             <Button
               type="button"
-              variant={mode === 'rate' ? 'secondary' : 'outline'}
+              variant="outline"
               size="sm"
-              className="h-7 px-2 text-xs"
+              className={`h-7 px-2 text-xs ${mode === 'rate' ? 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 hover:text-primary' : ''}`}
               onClick={() => setMode('rate')}
             >
               Rate %
@@ -94,12 +85,12 @@ function ErrorRateChart({ data, isLoading, days }: ErrorRateChartProps) {
                   <linearGradient id="errorGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop
                       offset="5%"
-                      stopColor="var(--chart-4)"
+                      stopColor="var(--chart-1)"
                       stopOpacity={0.3}
                     />
                     <stop
                       offset="95%"
-                      stopColor="var(--chart-4)"
+                      stopColor="var(--chart-1)"
                       stopOpacity={0}
                     />
                   </linearGradient>
@@ -110,7 +101,7 @@ function ErrorRateChart({ data, isLoading, days }: ErrorRateChartProps) {
                 />
                 <XAxis
                   dataKey="timestamp"
-                  tickFormatter={(ts: string) => formatTimestamp(ts, days)}
+                  tickFormatter={(ts: string) => formatTimestamp(ts, days, tz)}
                   className="text-xs fill-muted-foreground"
                   tickLine={false}
                   axisLine={false}
@@ -128,7 +119,7 @@ function ErrorRateChart({ data, isLoading, days }: ErrorRateChartProps) {
                     return (
                       <div className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
                         <p className="mb-1 font-medium">
-                          {new Date(label as string).toLocaleString()}
+                          {formatFullDateTime(label as string, tz)}
                         </p>
                         <p>
                           {metric.label}:{' '}
@@ -143,11 +134,11 @@ function ErrorRateChart({ data, isLoading, days }: ErrorRateChartProps) {
                 <Area
                   type="monotone"
                   dataKey={metric.key}
-                  stroke="var(--chart-4)"
+                  stroke="var(--chart-1)"
                   strokeWidth={2}
                   fill="url(#errorGradient)"
                   dot={false}
-                  activeDot={{ r: 4, fill: 'var(--chart-4)' }}
+                  activeDot={{ r: 4, fill: 'var(--chart-1)' }}
                   {...chartAnimation}
                 />
               </AreaChart>
