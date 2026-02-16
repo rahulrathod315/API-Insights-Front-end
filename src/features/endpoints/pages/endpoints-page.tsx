@@ -146,7 +146,7 @@ export default function EndpointsPage() {
       <AnimatePresence>
         {selectedEndpoint && (
           <motion.div
-            className="fixed inset-0 z-50 bg-background md:right-0 md:left-auto md:w-[500px] lg:relative lg:h-full lg:w-[450px] lg:shrink-0"
+            className="fixed inset-0 z-50 bg-background md:right-0 md:left-auto md:w-full md:max-w-[500px] lg:relative lg:h-full lg:w-full lg:max-w-[450px] lg:shrink-0"
             initial={{ x: '100%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}

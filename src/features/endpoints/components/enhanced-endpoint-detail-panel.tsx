@@ -85,7 +85,7 @@ export function EnhancedEndpointDetailPanel({
   }, {} as Record<string, number>)
 
   return (
-    <div className="flex h-full flex-col border-l bg-background">
+    <div className="flex h-full flex-col border-l bg-background overflow-x-hidden">
       {/* Header */}
       <div className="flex items-center justify-between border-b px-6 py-4">
         <h2 className="text-lg font-semibold">Endpoint Analytics</h2>
@@ -115,7 +115,7 @@ export function EnhancedEndpointDetailPanel({
               >
                 {endpoint.method}
               </Badge>
-              <span className="font-mono text-sm font-medium">
+              <span className="font-mono text-sm font-medium break-words">
                 {endpoint.path}
               </span>
             </div>
@@ -141,7 +141,7 @@ export function EnhancedEndpointDetailPanel({
             <>
               <div>
                 <h3 className="mb-3 text-sm font-semibold">Performance Summary</h3>
-                <StaggerGroup className="grid grid-cols-2 gap-3">
+                <StaggerGroup className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <StaggerItem>
                     <StatCard
                       title="Total Requests"
