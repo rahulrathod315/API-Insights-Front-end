@@ -4,8 +4,6 @@ import { StaggerGroup, StaggerItem } from '@/components/animation/stagger-group'
 import { CardSkeleton } from '@/components/shared/loading-skeleton'
 import { StatCard } from '@/components/shared/stat-card'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils/cn'
-import { formatNumber, formatPercent } from '@/lib/utils/format'
 import { differenceInMinutes, parseISO, subDays, startOfDay } from 'date-fns'
 import {
   Area,
@@ -20,7 +18,7 @@ import {
   YAxis,
 } from 'recharts'
 import { AlertTriangle, Bell, CheckCircle, TrendingUp } from 'lucide-react'
-import type { Alert, AlertHistory } from '../types'
+import type { Alert } from '../types'
 
 interface AlertAnalyticsDashboardProps {
   alerts: Alert[]
@@ -204,7 +202,7 @@ export function AlertAnalyticsDashboard({
                       borderRadius: '6px',
                       color: '#fafafa',
                     }}
-                    formatter={(value: number) => [value, 'Triggered']}
+                    formatter={(value: number | undefined) => [value ?? 0, 'Triggered']}
                   />
                   <Area
                     type="monotone"
@@ -243,7 +241,7 @@ export function AlertAnalyticsDashboard({
                         label={false}
                         isAnimationActive={false}
                       >
-                        {analytics.metricBreakdownData.map((entry, index) => (
+                        {analytics.metricBreakdownData.map((_entry, index) => (
                           <Cell
                             key={`cell-${index}`}
                             fill={CHART_COLORS[index % CHART_COLORS.length]}

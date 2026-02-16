@@ -11,12 +11,8 @@ export function SLAMiniTrend({ data, target, className }: SLAMiniTrendProps) {
   // Transform data into chart format
   const chartData = data.map((value, index) => ({ value, index }))
 
-  // Determine if trending up or down
-  const firstValue = data[0] ?? 0
-  const lastValue = data[data.length - 1] ?? 0
-  const trend = lastValue > firstValue ? 'up' : lastValue < firstValue ? 'down' : 'neutral'
-
   // Check if currently meeting target
+  const lastValue = data[data.length - 1] ?? 0
   const meetingTarget = lastValue >= target
 
   const strokeColor = meetingTarget

@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils/cn'
 import { formatPercent, formatMs } from '@/lib/utils/format'
 import { SLAMiniTrend } from './sla-mini-trend'
-import { AlertTriangle, Clock, TrendingDown } from 'lucide-react'
+import { AlertTriangle, Clock } from 'lucide-react'
 import { differenceInDays, addDays, parseISO } from 'date-fns'
 import type { SLAWithCompliance } from '../types'
 
@@ -19,7 +19,7 @@ function SLACard({ sla, isSelected, onClick, incidentCount = 0 }: SLACardProps) 
   const isMeeting = compliance.is_meeting_sla
 
   // Generate mock 7-day trend data (in production would come from API)
-  const trendData = Array.from({ length: 7 }, (_, i) =>
+  const trendData = Array.from({ length: 7 }, () =>
     compliance.uptime_percent + (Math.random() - 0.5) * 0.5
   )
 

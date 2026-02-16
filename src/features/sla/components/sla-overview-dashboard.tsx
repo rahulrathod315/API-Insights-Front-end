@@ -3,9 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StaggerGroup, StaggerItem } from '@/components/animation/stagger-group'
 import { CardSkeleton } from '@/components/shared/loading-skeleton'
 import { StatCard } from '@/components/shared/stat-card'
-import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils/cn'
-import { formatPercent, formatNumber } from '@/lib/utils/format'
+import { formatPercent } from '@/lib/utils/format'
 import {
   Area,
   AreaChart,
@@ -232,7 +230,7 @@ export function SLAOverviewDashboard({
                     labelStyle={{
                       color: '#fafafa',
                     }}
-                    formatter={(value: number) => [`${value.toFixed(2)}%`, 'Uptime']}
+                    formatter={(value: number | undefined) => [`${(value ?? 0).toFixed(2)}%`, 'Uptime']}
                   />
                   <ReferenceLine
                     y={99.9}
@@ -287,7 +285,7 @@ export function SLAOverviewDashboard({
                           borderRadius: '6px',
                           color: '#fafafa',
                         }}
-                        formatter={(value: number, name: string) => [`${value} incidents`, name]}
+                        formatter={(value: number | undefined, name: string | undefined) => [`${value ?? 0} incidents`, name ?? '']}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -351,7 +349,7 @@ export function SLAOverviewDashboard({
                     color: '#fafafa',
                   }}
                   cursor={{ fill: 'transparent' }}
-                  formatter={(value: number) => [`${value.toFixed(2)}%`, 'Uptime']}
+                  formatter={(value: number | undefined) => [`${(value ?? 0).toFixed(2)}%`, 'Uptime']}
                 />
                 <ReferenceLine
                   x={99.9}

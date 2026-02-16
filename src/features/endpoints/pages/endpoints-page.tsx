@@ -87,8 +87,8 @@ export default function EndpointsPage() {
   const endpointStats = endpointStatsQuery.data?.endpoints ?? []
 
   return (
-    <div className="flex min-h-0">
-      <div className="min-w-0 flex-1 space-y-6">
+    <div className="flex h-full min-h-0 flex-col lg:flex-row">
+      <div className="min-w-0 flex-1 space-y-6 overflow-auto">
         <PageHeader
           title="Endpoints"
           description="Monitor and manage your API endpoints with comprehensive performance analytics."
@@ -146,10 +146,10 @@ export default function EndpointsPage() {
       <AnimatePresence>
         {selectedEndpoint && (
           <motion.div
-            className="w-[400px] shrink-0"
-            initial={{ x: 400, opacity: 0 }}
+            className="fixed inset-0 z-50 bg-background md:right-0 md:left-auto md:w-[500px] lg:relative lg:h-full lg:w-[450px] lg:shrink-0"
+            initial={{ x: '100%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 400, opacity: 0 }}
+            exit={{ x: '100%', opacity: 0 }}
             transition={{ duration: 0.25, ease: [0, 0, 0.2, 1] }}
           >
             <EnhancedEndpointDetailPanel

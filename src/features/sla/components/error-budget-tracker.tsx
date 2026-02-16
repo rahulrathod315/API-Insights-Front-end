@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils/cn'
 import { formatPercent } from '@/lib/utils/format'
-import { addDays, differenceInDays, format } from 'date-fns'
+import { addDays, format } from 'date-fns'
 import {
   Area,
   AreaChart,
@@ -179,7 +179,7 @@ export function ErrorBudgetTracker({ sla, className }: ErrorBudgetTrackerProps) 
                   borderRadius: '6px',
                   color: '#fafafa',
                 }}
-                formatter={(value: number) => [`${value.toFixed(1)}%`, 'Consumed']}
+                formatter={(value: number | undefined) => [`${(value ?? 0).toFixed(1)}%`, 'Consumed']}
               />
               <ReferenceLine
                 y={100}

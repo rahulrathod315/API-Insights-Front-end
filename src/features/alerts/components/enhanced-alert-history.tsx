@@ -222,8 +222,8 @@ export function EnhancedAlertHistory({ alert, history, isLoading }: EnhancedAler
                     borderRadius: '6px',
                   }}
                   labelFormatter={(value) => formatDateTime(new Date(value).toISOString(), tz)}
-                  formatter={(value: number, name: string) => [
-                    value.toFixed(2),
+                  formatter={(value: number | undefined, name: string | undefined) => [
+                    (value ?? 0).toFixed(2),
                     name === 'value' ? 'Metric Value' : 'Threshold',
                   ]}
                 />

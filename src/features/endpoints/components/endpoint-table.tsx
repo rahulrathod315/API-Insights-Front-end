@@ -271,7 +271,7 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
 
                   // Generate mock 7-day trend data (in production, this would come from time-series API)
                   const trendData = stats
-                    ? Array.from({ length: 7 }, (_, i) =>
+                    ? Array.from({ length: 7 }, () =>
                         stats.total_requests * (0.8 + Math.random() * 0.4) / 7
                       )
                     : []

@@ -22,10 +22,6 @@ function calculateHealthScore(alert: Alert): HealthScore {
 
   // Factor 1: Trigger frequency (estimate based on last triggered)
   if (alert.last_triggered_at) {
-    const daysSinceCreated = Math.max(
-      1,
-      differenceInMinutes(new Date(), parseISO(alert.created_at)) / (60 * 24)
-    )
     const daysSinceTriggered = differenceInMinutes(
       new Date(),
       parseISO(alert.last_triggered_at)

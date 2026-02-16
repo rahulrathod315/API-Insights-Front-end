@@ -1,14 +1,14 @@
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { StaggerGroup, StaggerItem } from '@/components/animation/stagger-group'
 import { StatCard } from '@/components/shared/stat-card'
 import { CardSkeleton } from '@/components/shared/loading-skeleton'
 import { StatusBreakdown } from '@/features/analytics/components/status-breakdown'
 import { cn } from '@/lib/utils/cn'
-import { formatDate, formatNumber, formatMs, formatPercent, formatBytes } from '@/lib/utils/format'
+import { formatDate, formatNumber, formatMs, formatBytes } from '@/lib/utils/format'
 import { useTimezone } from '@/lib/hooks/use-timezone'
 import { useEndpointMetrics } from '../hooks'
 import {
@@ -24,13 +24,13 @@ import {
 } from 'lucide-react'
 import { useProjectContext } from '@/features/projects/project-context'
 import {
-  Area,
-  AreaChart,
+  
+  
   Bar,
   BarChart,
   CartesianGrid,
-  Line,
-  LineChart,
+  
+  
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -252,7 +252,7 @@ export function EnhancedEndpointDetailPanel({
                                 border: '1px solid hsl(var(--border))',
                                 borderRadius: '6px',
                               }}
-                              formatter={(value: number) => [formatNumber(value), 'Requests']}
+                              formatter={(value: number | undefined) => [formatNumber(value ?? 0), 'Requests']}
                             />
                             <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
                           </BarChart>

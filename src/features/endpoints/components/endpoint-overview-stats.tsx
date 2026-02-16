@@ -19,7 +19,7 @@ export function EndpointOverviewStats({
   endpoints,
   endpointStats,
   isLoading = false,
-  periodLabel,
+  
 }: EndpointOverviewStatsProps) {
   const stats = useMemo(() => {
     const totalEndpoints = endpoints.length
