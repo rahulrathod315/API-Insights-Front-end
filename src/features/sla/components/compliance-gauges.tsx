@@ -36,14 +36,14 @@ function UptimeGauge({ uptime, target }: { uptime: number; target: number }) {
                   dataKey="value"
                   stroke="none"
                 >
-                  <Cell fill="var(--chart-1)" />
-                  <Cell fill="var(--muted)" />
+                  <Cell fill="#10b981" />
+                  <Cell fill="#27272a" />
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
           </div>
           <div>
-            <p className="text-2xl font-bold text-primary">
+            <p className="text-2xl font-bold text-success">
               {formatPercent(uptime)}
             </p>
             <p className="text-sm text-muted-foreground">Target: {formatPercent(target)}</p>
@@ -78,14 +78,14 @@ function MetricBar({
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-primary">
+          <span className="text-lg font-bold">
             {formatValue(current)}
           </span>
           <span className="text-sm text-muted-foreground">Target: {formatValue(target)}</span>
         </div>
         <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full rounded-full transition-all bg-primary"
+            className="h-full rounded-full transition-all"
             style={{ width: `${ratio}%` }}
           />
         </div>

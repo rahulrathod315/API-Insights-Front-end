@@ -5,6 +5,7 @@ import { EmptyState } from '@/components/shared/empty-state'
 import { TableSkeleton } from '@/components/shared/loading-skeleton'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 import { AlertStateBadge } from './alert-state-badge'
+import { AlertHealthBadge } from './alert-health-badge'
 import { useUpdateAlert, useDeleteAlert } from '../hooks'
 import { useProjectContext } from '@/features/projects/project-context'
 import { formatRelativeTime } from '@/lib/utils/format'
@@ -70,10 +71,10 @@ function AlertTable({ alerts, isLoading, onEdit, onViewHistory }: AlertTableProp
                 Condition
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                Window
+                Status
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                Status
+                Health Score
               </th>
               <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                 Enabled
@@ -93,16 +94,25 @@ function AlertTable({ alerts, isLoading, onEdit, onViewHistory }: AlertTableProp
                 className="border-b transition-colors hover:bg-muted/50 cursor-pointer"
                 onClick={() => onViewHistory(alert)}
               >
-                <td className="p-4 align-middle font-medium">{alert.name}</td>
+                <td className="p-4 align-middle">
+                  <div>
+                    <div className="font-medium">{alert.name}</div>
+                    {alert.description && (
+                      <div className="text-xs text-muted-foreground">{alert.description}</div>
+                    )}
+                  </div>
+                </td>
                 <td className="p-4 align-middle">{alert.metric_display}</td>
                 <td className="p-4 align-middle">
                   <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
                     {alert.comparison_display} {alert.threshold}
                   </code>
                 </td>
-                <td className="p-4 align-middle">{alert.evaluation_window_minutes} min</td>
                 <td className="p-4 align-middle">
                   <AlertStateBadge status={alert.status} />
+                </td>
+                <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                  <AlertHealthBadge alert={alert} />
                 </td>
                 <td className="p-4 align-middle">
                   <Switch

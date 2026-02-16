@@ -5,12 +5,15 @@ import {
   createEndpoint,
   updateEndpoint,
   deleteEndpoint,
+  getEndpointMetrics,
+  getEndpointTimeSeries,
 } from './api'
 import type {
   CreateEndpointRequest,
   UpdateEndpointRequest,
   EndpointFilters,
 } from './types'
+import type { AnalyticsParams } from '@/features/analytics/types'
 
 const endpointKeys = {
   all: (projectId: string) => ['endpoints', projectId] as const,
@@ -18,6 +21,10 @@ const endpointKeys = {
     ['endpoints', projectId, filters] as const,
   detail: (projectId: string, endpointId: string) =>
     ['endpoints', projectId, endpointId] as const,
+  metrics: (projectId: string, endpointId: string, params?: AnalyticsParams) =>
+    ['endpoint-metrics', projectId, endpointId, params] as const,
+  timeSeries: (projectId: string, endpointId: string, params?: AnalyticsParams) =>
+    ['endpoint-time-series', projectId, endpointId, params] as const,
 }
 
 export function useEndpoints(projectId: string, filters?: EndpointFilters) {
@@ -32,6 +39,30 @@ export function useEndpoint(projectId: string, endpointId: string) {
   return useQuery({
     queryKey: endpointKeys.detail(projectId, endpointId),
     queryFn: () => getEndpoint(projectId, endpointId),
+    enabled: !!projectId && !!endpointId,
+  })
+}
+
+export function useEndpointMetrics(
+  projectId: string,
+  endpointId: string,
+  params?: AnalyticsParams
+) {
+  return useQuery({
+    queryKey: endpointKeys.metrics(projectId, endpointId, params),
+    queryFn: () => getEndpointMetrics(projectId, endpointId, params),
+    enabled: !!projectId && !!endpointId,
+  })
+}
+
+export function useEndpointTimeSeries(
+  projectId: string,
+  endpointId: string,
+  params?: AnalyticsParams
+) {
+  return useQuery({
+    queryKey: endpointKeys.timeSeries(projectId, endpointId, params),
+    queryFn: () => getEndpointTimeSeries(projectId, endpointId, params),
     enabled: !!projectId && !!endpointId,
   })
 }

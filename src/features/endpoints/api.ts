@@ -1,6 +1,7 @@
 import { apiClient } from '@/lib/api/client'
 import type { PaginatedResponse } from '@/lib/api/types'
 import type { Endpoint, CreateEndpointRequest, UpdateEndpointRequest, EndpointFilters } from './types'
+import type { EndpointMetrics, AnalyticsParams, TimeSeriesResponse } from '@/features/analytics/types'
 
 export async function listEndpoints(
   projectId: string,
@@ -51,4 +52,30 @@ export async function deleteEndpoint(
   endpointId: string
 ): Promise<void> {
   await apiClient.delete(`/api/v1/projects/${projectId}/endpoints/${endpointId}/`)
+}
+
+// Analytics API functions
+
+export async function getEndpointMetrics(
+  projectId: string,
+  endpointId: string,
+  params?: AnalyticsParams
+): Promise<EndpointMetrics> {
+  const response = await apiClient.get<EndpointMetrics>(
+    `/api/v1/analytics/projects/${projectId}/endpoints/${endpointId}/`,
+    { params }
+  )
+  return response.data
+}
+
+export async function getEndpointTimeSeries(
+  projectId: string,
+  endpointId: string,
+  params?: AnalyticsParams
+): Promise<TimeSeriesResponse> {
+  const response = await apiClient.get<TimeSeriesResponse>(
+    `/api/v1/analytics/projects/${projectId}/time-series/`,
+    { params: { ...params, endpoint_id: endpointId } }
+  )
+  return response.data
 }

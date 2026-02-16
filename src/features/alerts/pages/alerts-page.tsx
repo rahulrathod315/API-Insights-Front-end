@@ -4,7 +4,9 @@ import { Card } from '@/components/ui/card'
 import { PageHeader } from '@/components/shared/page-header'
 import { AlertTable } from '../components/alert-table'
 import { CreateAlertDialog } from '../components/create-alert-dialog'
-import { AlertHistory } from '../components/alert-history'
+import { EnhancedAlertHistory } from '../components/enhanced-alert-history'
+import { AlertAnalyticsDashboard } from '../components/alert-analytics-dashboard'
+import { DataFreshnessIndicator } from '@/features/analytics/components/data-freshness-indicator'
 import { useAlerts, useAlertHistory } from '../hooks'
 import { useProjectContext } from '@/features/projects/project-context'
 import {
@@ -24,10 +26,14 @@ export default function AlertsPage() {
   const { project } = useProjectContext()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
-  const { data, isLoading } = useAlerts(String(project.id), { page, page_size: pageSize })
+  const { data, isLoading, refetch, dataUpdatedAt, isFetching } = useAlerts(String(project.id), { page, page_size: pageSize })
   const alerts = data?.results ?? []
   const pagination = data?.pagination
   const totalPages = pagination?.total_pages ?? 1
+
+  // Fetch all alerts for analytics (without pagination)
+  const { data: allAlertsData } = useAlerts(String(project.id), { page: 1, page_size: 1000 })
+  const allAlerts = allAlertsData?.results ?? []
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingAlert, setEditingAlert] = useState<Alert | undefined>(undefined)
@@ -62,12 +68,24 @@ export default function AlertsPage() {
         title="Alerts"
         description="Monitor your API metrics and get notified when thresholds are crossed."
         actions={
-          <Button onClick={handleCreate}>
-            <Plus className="h-4 w-4" />
-            Create Alert
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <DataFreshnessIndicator
+              isFetching={isFetching}
+              dataUpdatedAt={dataUpdatedAt}
+              onRefresh={refetch}
+            />
+            <Button onClick={handleCreate}>
+              <Plus className="h-4 w-4" />
+              Create Alert
+            </Button>
+          </div>
         }
       />
+
+      {/* Analytics Dashboard */}
+      {allAlerts.length > 0 && (
+        <AlertAnalyticsDashboard alerts={allAlerts} isLoading={isLoading} />
+      )}
 
       <Card className="overflow-hidden">
         <AlertTable
@@ -146,13 +164,13 @@ export default function AlertsPage() {
 
       {selectedAlert && (
         <Card className="p-6">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-6 flex items-center justify-between">
             <div>
               <h3 className="text-lg font-semibold">
-                History: {selectedAlert.name}
+                Alert History: {selectedAlert.name}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Timeline of state changes for this alert.
+                Detailed analytics and timeline of events for this alert.
               </p>
             </div>
             <Button variant="ghost" size="icon" onClick={handleCloseHistory}>
@@ -160,7 +178,11 @@ export default function AlertsPage() {
               <span className="sr-only">Close history</span>
             </Button>
           </div>
-          <AlertHistory history={history} isLoading={isHistoryLoading} />
+          <EnhancedAlertHistory
+            alert={selectedAlert}
+            history={history}
+            isLoading={isHistoryLoading}
+          />
         </Card>
       )}
 

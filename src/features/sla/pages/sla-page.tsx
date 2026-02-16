@@ -5,6 +5,7 @@ import { StatCard } from '@/components/shared/stat-card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
+import { DataFreshnessIndicator } from '@/features/analytics/components/data-freshness-indicator'
 import { useProjectContext } from '@/features/projects/project-context'
 import { useSLADashboard, useDeleteSLA } from '../hooks'
 import { SLAViolationBanner } from '../components/sla-violation-banner'
@@ -13,12 +14,14 @@ import { CreateSLADialog } from '../components/create-sla-dialog'
 import { ComplianceGauges } from '../components/compliance-gauges'
 import { UptimeTimeline } from '../components/uptime-timeline'
 import { IncidentsTable } from '../components/incidents-table'
+import { SLAOverviewDashboard } from '../components/sla-overview-dashboard'
+import { ErrorBudgetTracker } from '../components/error-budget-tracker'
 import type { SLAConfig } from '../types'
 
 function SlaPage() {
   const { project } = useProjectContext()
   const projectId = String(project.id)
-  const { data: dashboard, isLoading } = useSLADashboard(projectId)
+  const { data: dashboard, isLoading, refetch, dataUpdatedAt, isFetching } = useSLADashboard(projectId)
   const deleteSLA = useDeleteSLA()
 
   const [selectedSlaId, setSelectedSlaId] = useState<number | null>(null)
@@ -59,15 +62,30 @@ function SlaPage() {
         title="SLA"
         description="Monitor and configure service level agreements"
         actions={
-          <Button onClick={() => { setEditingSla(undefined); setCreateDialogOpen(true) }}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create SLA
-          </Button>
+          <div className="flex flex-wrap items-center gap-3">
+            <DataFreshnessIndicator
+              isFetching={isFetching}
+              dataUpdatedAt={dataUpdatedAt}
+              onRefresh={refetch}
+            />
+            <Button onClick={() => { setEditingSla(undefined); setCreateDialogOpen(true) }}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create SLA
+            </Button>
+          </div>
         }
       />
 
       {dashboard && dashboard.breaching_sla > 0 && (
         <SLAViolationBanner breachingCount={dashboard.breaching_sla} />
+      )}
+
+      {/* Overview Dashboard */}
+      {dashboard && dashboard.slas.length > 0 && (
+        <SLAOverviewDashboard
+          slas={dashboard.slas}
+          isLoading={isLoading}
+        />
       )}
 
       {/* Summary Stats */}
@@ -159,7 +177,13 @@ function SlaPage() {
       {selectedSla && (
         <div className="space-y-6">
           <h2 className="text-lg font-semibold">{selectedSla.name} — Compliance Detail</h2>
+
+          {/* Compliance Gauges - Full Width */}
           <ComplianceGauges compliance={selectedSla.compliance} />
+
+          {/* Error Budget Tracker */}
+          <ErrorBudgetTracker sla={selectedSla} />
+
           <UptimeTimeline projectId={projectId} slaId={String(selectedSla.id)} />
           <IncidentsTable projectId={projectId} slaId={String(selectedSla.id)} />
         </div>

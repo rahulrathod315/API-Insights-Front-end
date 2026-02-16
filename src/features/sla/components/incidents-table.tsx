@@ -30,10 +30,22 @@ function IncidentRow({ incident, tz }: { incident: DowntimeIncident; tz?: string
     ([, a], [, b]) => b - a
   )
 
+  // Calculate impact score (duration × error rate × affected endpoints)
+  const impactScore = Math.round(
+    (incident.duration_seconds / 60) * incident.avg_error_rate * incident.affected_endpoints.length
+  )
+
+  // Root cause color mapping
+  const rootCauseColor = {
+    high_error_rate: 'bg-destructive/10 text-destructive border-destructive/20',
+    no_traffic: 'bg-warning/10 text-warning border-warning/20',
+    high_response_time: 'bg-chart-3/10 text-chart-3 border-chart-3/20',
+  }[incident.root_cause] || 'bg-muted text-muted-foreground'
+
   return (
     <div className="rounded-lg border">
       <button onClick={() => setIsOpen(!isOpen)} className="w-full">
-          <div className="grid grid-cols-7 gap-4 p-4 text-sm hover:bg-muted/50">
+          <div className="grid grid-cols-8 gap-4 p-4 text-sm hover:bg-muted/50">
             <div className="flex items-center gap-2">
               <ChevronDown
                 className={cn(
@@ -48,7 +60,9 @@ function IncidentRow({ incident, tz }: { incident: DowntimeIncident; tz?: string
               <span className="font-medium tabular-nums">{formatDuration(incident.duration_seconds)}</span>
             </div>
             <div>
-              <Badge variant="secondary">{incident.root_cause_display}</Badge>
+              <Badge variant="outline" className={cn('font-medium', rootCauseColor)}>
+                {incident.root_cause_display}
+              </Badge>
             </div>
             <div className="flex items-center gap-2">
               <Server className="h-3.5 w-3.5 text-muted-foreground" />
@@ -61,6 +75,12 @@ function IncidentRow({ incident, tz }: { incident: DowntimeIncident; tz?: string
             </div>
             <div className="text-right">
               <span className="font-medium">{formatMs(incident.avg_response_time)}</span>
+            </div>
+            <div className="text-right">
+              <div className="flex flex-col items-end">
+                <span className="font-bold text-primary">{impactScore}</span>
+                <span className="text-xs text-muted-foreground">impact</span>
+              </div>
             </div>
             <div className="text-right">
               <Badge variant={incident.is_resolved ? 'default' : 'destructive'}>
@@ -186,7 +206,7 @@ function IncidentsTable({ projectId, slaId }: IncidentsTableProps) {
         </CardHeader>
         <CardContent>
           <p className="py-8 text-center text-sm text-muted-foreground">
-            No incidents recorded - excellent uptime! 🎉
+            No incidents recorded - excellent uptime!
           </p>
         </CardContent>
       </Card>
@@ -209,13 +229,14 @@ function IncidentsTable({ projectId, slaId }: IncidentsTableProps) {
       <CardContent>
         <div className="space-y-3">
           {/* Header */}
-          <div className="grid grid-cols-7 gap-4 px-4 text-xs font-medium text-muted-foreground">
+          <div className="grid grid-cols-8 gap-4 px-4 text-xs font-medium text-muted-foreground">
             <div>Started At</div>
             <div>Duration</div>
             <div>Root Cause</div>
             <div>Endpoints</div>
             <div className="text-right">Error Rate</div>
             <div className="text-right">Avg Response</div>
+            <div className="text-right">Impact Score</div>
             <div className="text-right">Status</div>
           </div>
 
