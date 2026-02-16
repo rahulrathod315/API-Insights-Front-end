@@ -7,10 +7,13 @@ import { CardSkeleton } from '@/components/shared/loading-skeleton'
 import { useProjectContext } from '@/features/projects/project-context'
 import { RequestVolumeChart } from '../components/request-volume-chart'
 import { StatusBreakdown } from '../components/status-breakdown'
+import { HourlyDistribution } from '../components/hourly-distribution'
+import { RecentErrorsTable } from '../components/recent-errors-table'
 import { TimeRangePicker } from '../components/time-range-picker'
 import { useEndpointMetrics, useTimeSeries } from '../hooks'
 import { useAnalyticsParams } from '../analytics-params-context'
-import { formatNumber, formatMs } from '@/lib/utils/format'
+import { formatNumber, formatMs, formatBytes } from '@/lib/utils/format'
+import { ArrowUpFromLine, ArrowDownToLine } from 'lucide-react'
 
 export default function EndpointAnalyticsPage() {
   const { project } = useProjectContext()
@@ -66,12 +69,12 @@ export default function EndpointAnalyticsPage() {
       {/* Stat cards */}
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+          {Array.from({ length: 6 }).map((_, i) => (
             <CardSkeleton key={i} />
           ))}
         </div>
       ) : data ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <StatCard
             title="Total Requests"
             value={formatNumber(data.summary.total_requests)}
@@ -87,6 +90,18 @@ export default function EndpointAnalyticsPage() {
           <StatCard
             title="Max Response Time"
             value={formatMs(data.summary.max_response_time_ms)}
+          />
+          <StatCard
+            title="Request Size"
+            value={formatBytes(data.summary.total_request_size_bytes)}
+            icon={ArrowUpFromLine}
+            iconClassName="bg-chart-1/10 text-chart-1"
+          />
+          <StatCard
+            title="Response Size"
+            value={formatBytes(data.summary.total_response_size_bytes)}
+            icon={ArrowDownToLine}
+            iconClassName="bg-chart-2/10 text-chart-2"
           />
         </div>
       ) : null}
@@ -120,11 +135,29 @@ export default function EndpointAnalyticsPage() {
         days={params.days}
       />
 
-      {/* Status breakdown */}
-      <StatusBreakdown
-        data={statusBreakdown}
-        isLoading={isLoading}
-      />
+      {/* Status breakdown + Hourly distribution */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        <StatusBreakdown
+          data={statusBreakdown}
+          isLoading={isLoading}
+        />
+        {data?.hourly_distribution && (
+          <HourlyDistribution
+            data={data.hourly_distribution}
+            isLoading={isLoading}
+            title="24-Hour Traffic Pattern"
+            showResponseTime={true}
+          />
+        )}
+      </div>
+
+      {/* Recent Errors */}
+      {data?.recent_errors && data.recent_errors.length > 0 && (
+        <RecentErrorsTable
+          data={data.recent_errors}
+          isLoading={isLoading}
+        />
+      )}
     </div>
   )
 }

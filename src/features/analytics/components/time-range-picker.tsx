@@ -10,11 +10,13 @@ import {
 } from '@/components/ui/select'
 import { DatePicker } from '@/components/ui/date-picker'
 import { Label } from '@/components/ui/label'
+import { GranularitySelector } from './granularity-selector'
 import type { AnalyticsParams } from '../types'
 
 interface TimeRangePickerProps {
   value: AnalyticsParams
   onChange: (params: AnalyticsParams) => void
+  showGranularity?: boolean
 }
 
 type DaysOption = '1' | '7' | '30' | '90' | 'custom'
@@ -35,7 +37,7 @@ function daysToOption(days?: number): DaysOption {
   return '7'
 }
 
-function TimeRangePicker({ value, onChange }: TimeRangePickerProps) {
+function TimeRangePicker({ value, onChange, showGranularity = false }: TimeRangePickerProps) {
   const isCustom = !!(value.start_date && value.end_date && !value.days)
   const [mode, setMode] = useState<DaysOption>(
     isCustom ? 'custom' : daysToOption(value.days)
@@ -54,17 +56,34 @@ function TimeRangePicker({ value, onChange }: TimeRangePickerProps) {
     }
 
     setShowCustom(false)
-    onChange({ days: Number(option) })
+    const days = Number(option)
+
+    // Auto-set recommended granularity
+    let granularity: 'hour' | 'day' | 'week' | 'month' = 'day'
+    if (days <= 2) granularity = 'hour'
+    else if (days <= 90) granularity = 'day'
+    else if (days <= 180) granularity = 'week'
+    else granularity = 'month'
+
+    onChange({ days, granularity })
   }
 
   function handleApplyCustomRange() {
     if (startDate && endDate) {
-      onChange({ start_date: startDate, end_date: endDate })
+      onChange({
+        start_date: startDate,
+        end_date: endDate,
+        granularity: value.granularity || 'day',
+      })
     }
   }
 
+  function handleGranularityChange(granularity: 'hour' | 'day' | 'week' | 'month') {
+    onChange({ ...value, granularity })
+  }
+
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Select value={mode} onValueChange={handleDaysChange}>
         <SelectTrigger className="w-[180px]">
           <SelectValue placeholder="Select period" />
@@ -77,6 +96,15 @@ function TimeRangePicker({ value, onChange }: TimeRangePickerProps) {
           ))}
         </SelectContent>
       </Select>
+
+      {showGranularity && (
+        <GranularitySelector
+          value={value.granularity || 'day'}
+          onChange={handleGranularityChange}
+          variant="pills"
+          days={value.days}
+        />
+      )}
 
       {showCustom && (
         <div className="flex items-end gap-2">

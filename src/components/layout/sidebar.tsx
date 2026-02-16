@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useLocation, useParams, Link } from 'react-router-dom'
 import type { ReactNode } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -15,10 +14,6 @@ import {
   PanelLeft,
   X,
   ChevronDown,
-  Activity,
-  Zap,
-  AlertTriangle,
-  MapPin,
 } from 'lucide-react'
 import { cn } from '@/lib/utils/cn'
 import { Button } from '@/components/ui/button'
@@ -75,34 +70,7 @@ function getNavEntries(projectId: string): NavEntry[] {
     {
       label: 'Analytics',
       icon: <BarChart3 className="h-5 w-5" />,
-      basePath: `/projects/${projectId}/analytics`,
-      children: [
-        {
-          label: 'Overview',
-          icon: <Activity className="h-4 w-4" />,
-          path: `/projects/${projectId}/analytics`,
-        },
-        {
-          label: 'Traffic',
-          icon: <BarChart3 className="h-4 w-4" />,
-          path: `/projects/${projectId}/analytics/traffic`,
-        },
-        {
-          label: 'Performance',
-          icon: <Zap className="h-4 w-4" />,
-          path: `/projects/${projectId}/analytics/performance`,
-        },
-        {
-          label: 'Errors',
-          icon: <AlertTriangle className="h-4 w-4" />,
-          path: `/projects/${projectId}/analytics/errors`,
-        },
-        {
-          label: 'Geo',
-          icon: <MapPin className="h-4 w-4" />,
-          path: `/projects/${projectId}/analytics/geo`,
-        },
-      ],
+      path: `/projects/${projectId}/analytics`,
     },
     {
       label: 'SLA',
@@ -153,12 +121,6 @@ export function Sidebar({
     return location.pathname.startsWith(group.basePath)
   }
 
-  // Auto-expand analytics group if any child is active
-  const analyticsActive = navEntries.some(
-    (e) => isNavGroup(e) && isGroupActive(e)
-  )
-  const [analyticsOpen, setAnalyticsOpen] = useState(analyticsActive)
-
   function isExactActive(path: string, group: NavGroup): boolean {
     // For the Overview item, only match exact path (not children)
     if (path === group.basePath) {
@@ -208,8 +170,8 @@ export function Sidebar({
                     key={entry.basePath}
                     group={entry}
                     collapsed={collapsed}
-                    isOpen={analyticsOpen || isGroupActive(entry)}
-                    onToggle={() => setAnalyticsOpen((prev) => !prev)}
+                    isOpen={isGroupActive(entry)}
+                    onToggle={() => {}}
                     isActive={isActive}
                     isExactActive={(path) => isExactActive(path, entry)}
                     isGroupActive={isGroupActive(entry)}

@@ -54,7 +54,10 @@ export interface TimeSeriesPoint {
   success_count: number
   error_count: number
   avg_response_time: number
+  min_response_time: number
+  max_response_time: number
   p50_response_time: number
+  p90_response_time: number
   p95_response_time: number
   p99_response_time: number
   status_2xx: number
@@ -62,6 +65,7 @@ export interface TimeSeriesPoint {
   status_4xx: number
   status_5xx: number
   error_rate: number
+  success_rate: number
 }
 
 export interface RequestsPerEndpointResponse {
@@ -143,6 +147,8 @@ export interface EndpointMetrics {
     max_response_time_ms: number
     total_request_size_bytes: number
     total_response_size_bytes: number
+    avg_request_size_bytes?: number
+    avg_response_size_bytes?: number
   }
   percentiles: { p50: number; p90: number; p95: number; p99: number }
   status_distribution: Array<{ status_code: number; count: number }>

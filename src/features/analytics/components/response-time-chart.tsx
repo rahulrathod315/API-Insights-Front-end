@@ -27,16 +27,21 @@ interface ResponseTimeChartProps {
 }
 
 const series = [
-  { key: 'avg_response_time', label: 'Avg', color: 'var(--chart-1)', dash: undefined },
-  { key: 'p50_response_time', label: 'P50', color: 'var(--chart-2)', dash: undefined },
-  { key: 'p95_response_time', label: 'P95', color: 'var(--chart-3)', dash: '5 5' },
-  { key: 'p99_response_time', label: 'P99', color: 'var(--chart-4)', dash: '2 2' },
+  { key: 'avg_response_time', label: 'Avg', color: 'var(--chart-1)', dash: undefined, defaultVisible: true },
+  { key: 'p50_response_time', label: 'P50', color: 'var(--chart-2)', dash: undefined, defaultVisible: true },
+  { key: 'p90_response_time', label: 'P90', color: 'hsl(var(--chart-5))', dash: '3 3', defaultVisible: false },
+  { key: 'p95_response_time', label: 'P95', color: 'var(--chart-3)', dash: '5 5', defaultVisible: true },
+  { key: 'p99_response_time', label: 'P99', color: 'var(--chart-4)', dash: '2 2', defaultVisible: false },
+  { key: 'min_response_time', label: 'Min', color: 'hsl(var(--success))', dash: '1 3', defaultVisible: false },
+  { key: 'max_response_time', label: 'Max', color: 'hsl(var(--destructive))', dash: '1 3', defaultVisible: false },
 ] as const
 
 function ResponseTimeChart({ data, isLoading, days }: ResponseTimeChartProps) {
   const chartAnimation = useChartAnimation()
   const tz = useTimezone()
-  const [hiddenKeys, setHiddenKeys] = useState<string[]>([])
+  const [hiddenKeys, setHiddenKeys] = useState<string[]>(() =>
+    series.filter(s => !s.defaultVisible).map(s => s.key)
+  )
 
   const visibleSeries = useMemo(
     () => series.filter((item) => !hiddenKeys.includes(item.key)),
@@ -61,9 +66,9 @@ function ResponseTimeChart({ data, isLoading, days }: ResponseTimeChartProps) {
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <CardTitle className="text-base font-semibold">
-            Response Time
+            Response Time Trends
           </CardTitle>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
             {series.map((item) => {
               const isHidden = hiddenKeys.includes(item.key)
               return (
@@ -71,15 +76,17 @@ function ResponseTimeChart({ data, isLoading, days }: ResponseTimeChartProps) {
                   key={item.key}
                   type="button"
                   onClick={() => toggleSeries(item.key)}
-                  className={`flex items-center gap-1.5 rounded-full border px-2 py-1 transition ${
-                    isHidden ? 'opacity-50' : 'border-transparent bg-muted'
+                  className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-all ${
+                    isHidden
+                      ? 'border-border bg-background opacity-40 hover:opacity-60'
+                      : 'border-transparent bg-muted hover:bg-muted/80'
                   }`}
                 >
                   <span
                     className="inline-block h-2.5 w-2.5 rounded-full"
                     style={{ backgroundColor: item.color }}
                   />
-                  {item.label}
+                  <span className="font-medium">{item.label}</span>
                 </button>
               )
             })}

@@ -27,11 +27,11 @@ interface Bucket {
 }
 
 const BUCKET_COLORS = [
-  'var(--chart-1)',   // Fast (<100ms) — Orange
-  'var(--chart-1)',   // Normal (100-500ms) — Orange
-  'var(--chart-1)',   // Slow (500ms-1s) — Orange
-  'var(--chart-1)',   // Very Slow (1-2s) — Orange
-  'var(--chart-1)',   // Critical (>2s) — Orange
+  'var(--chart-1)',   // Fast (<100ms)
+  'var(--chart-2)',   // Normal (100-500ms)
+  'var(--chart-3)',   // Slow (500ms-1s)
+  'var(--chart-4)',   // Very Slow (1-2s)
+  'var(--chart-5)',   // Critical (>2s)
 ]
 
 export function ResponseTimeDistribution({ data, isLoading }: ResponseTimeDistributionProps) {
