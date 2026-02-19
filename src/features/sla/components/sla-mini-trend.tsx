@@ -16,8 +16,8 @@ export function SLAMiniTrend({ data, target, className }: SLAMiniTrendProps) {
   const meetingTarget = lastValue >= target
 
   const strokeColor = meetingTarget
-    ? 'hsl(var(--success))'
-    : 'hsl(var(--destructive))'
+    ? 'var(--success)'
+    : 'var(--destructive)'
 
   if (data.length === 0) {
     return (

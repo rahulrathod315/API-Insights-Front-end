@@ -1,8 +1,8 @@
 import { Activity, AlertTriangle, CheckCircle, Clock } from 'lucide-react'
 import { StatCard } from '@/components/shared/stat-card'
 import { CardSkeleton } from '@/components/shared/loading-skeleton'
-import { StaggerGroup, StaggerItem } from '@/components/animation'
-import { formatNumber, formatMs, formatPercent } from '@/lib/utils/format'
+import { StaggerGroup, StaggerItem, AnimatedNumber } from '@/components/animation'
+import { formatMs, formatPercent } from '@/lib/utils/format'
 import type { ProjectSummary } from '../types'
 
 interface OverviewStatsProps {
@@ -21,42 +21,60 @@ function OverviewStats({ data, isLoading }: OverviewStatsProps) {
     )
   }
 
+  const errorRate =
+    data.summary.total_requests > 0
+      ? (data.summary.error_requests / data.summary.total_requests) * 100
+      : 0
+
   return (
     <StaggerGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <StaggerItem>
         <StatCard
           title="Total Requests"
-          value={formatNumber(data.summary.total_requests)}
+          value={
+            <AnimatedNumber
+              value={data.summary.total_requests}
+              formatter={(v) =>
+                v >= 1_000_000
+                  ? `${(v / 1_000_000).toFixed(1)}M`
+                  : v >= 1_000
+                  ? `${(v / 1_000).toFixed(1)}K`
+                  : String(Math.round(v))
+              }
+            />
+          }
           icon={Activity}
           iconClassName="bg-primary/10 text-primary"
+          accentColor="var(--chart-1)"
         />
       </StaggerItem>
       <StaggerItem>
         <StatCard
           title="Error Rate"
-          value={formatPercent(
-            data.summary.total_requests > 0
-              ? (data.summary.error_requests / data.summary.total_requests) * 100
-              : 0
-          )}
+          value={<AnimatedNumber value={errorRate} formatter={formatPercent} />}
           icon={AlertTriangle}
-          iconClassName="bg-primary/10 text-primary"
+          iconClassName="bg-destructive/10 text-destructive"
+          accentColor="var(--chart-2)"
+          invertTrend
         />
       </StaggerItem>
       <StaggerItem>
         <StatCard
           title="Avg Response Time"
-          value={formatMs(data.summary.avg_response_time_ms)}
+          value={<AnimatedNumber value={data.summary.avg_response_time_ms} formatter={formatMs} />}
           icon={Clock}
-          iconClassName="bg-primary/10 text-primary"
+          iconClassName="bg-blue-500/10 text-blue-500"
+          accentColor="#3B82F6"
+          invertTrend
         />
       </StaggerItem>
       <StaggerItem>
         <StatCard
           title="Success Rate"
-          value={formatPercent(data.summary.success_rate)}
+          value={<AnimatedNumber value={data.summary.success_rate} formatter={formatPercent} />}
           icon={CheckCircle}
-          iconClassName="bg-primary/10 text-primary"
+          iconClassName="bg-success/10 text-success"
+          accentColor="var(--chart-3)"
         />
       </StaggerItem>
     </StaggerGroup>

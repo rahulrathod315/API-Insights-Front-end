@@ -24,7 +24,7 @@ const METHOD_COLORS: Record<string, string> = {
   POST: 'bg-primary/15 text-primary',
   PUT: 'bg-primary/10 text-primary',
   PATCH: 'bg-primary/10 text-primary',
-  DELETE: 'bg-primary/10 text-primary',
+  DELETE: 'bg-destructive/10 text-destructive',
 }
 
 const columns: Column<EndpointStats>[] = [

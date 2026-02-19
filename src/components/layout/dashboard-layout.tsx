@@ -1,10 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, Outlet } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils/cn'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Sidebar } from '@/components/layout/sidebar'
-import { PageTransition } from '@/components/animation'
 import { Header } from '@/components/layout/header'
 import { apiClient } from '@/lib/api/client'
 
@@ -20,11 +18,17 @@ export default function DashboardLayout() {
   const { data: projectList } = useQuery({
     queryKey: ['projects'],
     queryFn: async () => {
-      const response = await apiClient.get<{ data: Array<{ id: number; name: string }>; pagination: unknown }>('/api/v1/projects/')
-      return response.data.data
+      const response = await apiClient.get<{ data: Array<{ id: number; name: string }> }>('/api/v1/projects/')
+      return response.data
     },
+    staleTime: 120_000,
   })
-  const projects = (projectList ?? []).map((p) => ({ id: String(p.id), name: p.name }))
+
+  const projects = (Array.isArray(projectList) ? projectList : []).map((p) => ({
+    id: String(p.id),
+    name: p.name,
+  }))
+
   const currentProjectId = projectId ?? ''
   const [collapsed, setCollapsed] = useState(getInitialCollapsed)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -47,31 +51,18 @@ export default function DashboardLayout() {
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
-    if (mobileOpen) {
-      document.body.style.overflow = 'hidden'
-    } else {
-      document.body.style.overflow = ''
-    }
+    document.body.style.overflow = mobileOpen ? 'hidden' : ''
     return () => {
       document.body.style.overflow = ''
     }
   }, [mobileOpen])
 
-  const handleToggleCollapse = useCallback(() => {
-    setCollapsed((prev) => !prev)
-  }, [])
-
-  const handleMobileMenuToggle = useCallback(() => {
-    setMobileOpen((prev) => !prev)
-  }, [])
-
-  const handleMobileClose = useCallback(() => {
-    setMobileOpen(false)
-  }, [])
+  const handleToggleCollapse = useCallback(() => setCollapsed((p) => !p), [])
+  const handleMobileMenuToggle = useCallback(() => setMobileOpen((p) => !p), [])
+  const handleMobileClose = useCallback(() => setMobileOpen(false), [])
 
   return (
     <div className="relative flex h-screen overflow-hidden bg-background">
-      {/* Sidebar */}
       <Sidebar
         collapsed={collapsed}
         onToggleCollapse={handleToggleCollapse}
@@ -84,18 +75,18 @@ export default function DashboardLayout() {
       {/* Main content area */}
       <div
         className={cn(
-          'flex min-w-0 flex-1 flex-col transition-all duration-300',
-          // Offset for sidebar width on desktop
-          collapsed ? 'md:ml-16' : 'md:ml-64'
+          'flex min-w-0 flex-1 flex-col overflow-hidden transition-[margin] duration-300 ease-in-out',
+          collapsed ? 'md:ml-[60px]' : 'md:ml-[220px]'
         )}
       >
         <Header onMobileMenuToggle={handleMobileMenuToggle} />
 
-        <ScrollArea className="flex-1">
-          <main className="p-4 md:p-6 lg:p-8">
-            <PageTransition />
-          </main>
-        </ScrollArea>
+        {/* Scrollable page content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-screen-2xl p-4 md:p-6">
+            <Outlet />
+          </div>
+        </main>
       </div>
     </div>
   )

@@ -21,7 +21,7 @@ const METHOD_COLORS: Record<string, string> = {
   POST: 'bg-primary/15 text-primary',
   PUT: 'bg-primary/10 text-primary',
   PATCH: 'bg-primary/10 text-primary',
-  DELETE: 'bg-primary/10 text-primary',
+  DELETE: 'bg-destructive/10 text-destructive',
   HEAD: 'bg-primary/10 text-primary',
   OPTIONS: 'bg-muted text-muted-foreground',
 }
@@ -143,7 +143,7 @@ function EndpointDetailPanel({
             </Button>
             <Button
               variant="outline"
-              className="w-full justify-start text-primary hover:text-primary"
+              className="w-full justify-start text-destructive hover:text-destructive"
               onClick={() => onDelete(endpoint)}
             >
               <Trash2 className="mr-2 h-4 w-4" />

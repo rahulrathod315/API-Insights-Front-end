@@ -16,9 +16,9 @@ export function EndpointMiniChart({ data, className }: EndpointMiniChartProps) {
   const trend = lastValue > firstValue ? 'up' : lastValue < firstValue ? 'down' : 'neutral'
 
   const strokeColor = {
-    up: 'hsl(var(--success))',
-    down: 'hsl(var(--destructive))',
-    neutral: 'hsl(var(--muted-foreground))',
+    up: 'var(--success)',
+    down: 'var(--destructive)',
+    neutral: 'var(--muted-foreground)',
   }[trend]
 
   if (data.length === 0 || data.every((v) => v === 0)) {

@@ -13,19 +13,20 @@ export function AnalyticsParamsProvider({ children }: { children: ReactNode }) {
   const [params, setParamsState] = useState<AnalyticsParams>({ days: 7, granularity: 'day' })
 
   const setParams = useCallback((next: AnalyticsParams) => {
+    const resolved = { ...next }
     // Auto-set recommended granularity if not explicitly provided
-    if (!next.granularity && next.days) {
-      if (next.days <= 2) {
-        next.granularity = 'hour'
-      } else if (next.days <= 90) {
-        next.granularity = 'day'
-      } else if (next.days <= 180) {
-        next.granularity = 'week'
+    if (!resolved.granularity && resolved.days) {
+      if (resolved.days <= 2) {
+        resolved.granularity = 'hour'
+      } else if (resolved.days <= 90) {
+        resolved.granularity = 'day'
+      } else if (resolved.days <= 180) {
+        resolved.granularity = 'week'
       } else {
-        next.granularity = 'month'
+        resolved.granularity = 'month'
       }
     }
-    setParamsState(next)
+    setParamsState(resolved)
   }, [])
 
   return (

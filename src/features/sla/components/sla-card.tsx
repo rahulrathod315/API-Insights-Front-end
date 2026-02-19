@@ -2,7 +2,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils/cn'
 import { formatPercent, formatMs } from '@/lib/utils/format'
-import { SLAMiniTrend } from './sla-mini-trend'
 import { AlertTriangle, Clock } from 'lucide-react'
 import { differenceInDays, addDays, parseISO } from 'date-fns'
 import type { SLAWithCompliance } from '../types'
@@ -17,11 +16,6 @@ interface SLACardProps {
 function SLACard({ sla, isSelected, onClick, incidentCount = 0 }: SLACardProps) {
   const { compliance } = sla
   const isMeeting = compliance.is_meeting_sla
-
-  // Generate mock 7-day trend data (in production would come from API)
-  const trendData = Array.from({ length: 7 }, () =>
-    compliance.uptime_percent + (Math.random() - 0.5) * 0.5
-  )
 
   // Calculate days remaining in evaluation period
   const periodDays = sla.evaluation_period === 'weekly' ? 7 :
@@ -86,24 +80,18 @@ function SLACard({ sla, isSelected, onClick, incidentCount = 0 }: SLACardProps) 
         </div>
 
         <div className="mt-4 space-y-3">
-          {/* Uptime with Mini Trend */}
+          {/* Uptime */}
           <div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Uptime (7d trend)</span>
-              <span className="font-medium text-primary">
+              <span className="text-muted-foreground">Uptime</span>
+              <span className={cn('font-medium', isMeeting ? 'text-success' : 'text-destructive')}>
                 {formatPercent(compliance.uptime_percent)} / {formatPercent(compliance.uptime_target)}
               </span>
             </div>
             <div className="mt-1 h-2 w-full overflow-hidden rounded-full bg-muted">
               <div
-                className="h-full rounded-full transition-all bg-primary"
+                className={cn('h-full rounded-full transition-all', isMeeting ? 'bg-success' : 'bg-destructive')}
                 style={{ width: `${Math.min(100, compliance.uptime_percent)}%` }}
-              />
-            </div>
-            <div className="mt-2">
-              <SLAMiniTrend
-                data={trendData}
-                target={sla.uptime_target_percent}
               />
             </div>
           </div>
@@ -114,7 +102,7 @@ function SLACard({ sla, isSelected, onClick, incidentCount = 0 }: SLACardProps) 
               <span className="text-muted-foreground">
                 Response Time ({compliance.response_time.percentile})
               </span>
-              <span className="font-medium text-primary">
+              <span className={cn('font-medium', compliance.response_time.current_ms <= compliance.response_time.target_ms ? 'text-success' : 'text-destructive')}>
                 {formatMs(compliance.response_time.current_ms)} / {formatMs(compliance.response_time.target_ms)}
               </span>
             </div>
@@ -124,7 +112,7 @@ function SLACard({ sla, isSelected, onClick, incidentCount = 0 }: SLACardProps) 
           {compliance.error_rate && compliance.error_rate.target_percent > 0 && (
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Error Rate</span>
-              <span className="font-medium text-primary">
+              <span className={cn('font-medium', compliance.error_rate.current_percent <= compliance.error_rate.target_percent ? 'text-success' : 'text-destructive')}>
                 {formatPercent(compliance.error_rate.current_percent)} / {formatPercent(compliance.error_rate.target_percent)}
               </span>
             </div>

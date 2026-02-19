@@ -25,8 +25,15 @@ const createProjectSchema = z.object({
 
 type CreateProjectFormValues = z.infer<typeof createProjectSchema>
 
-function CreateProjectDialog() {
-  const [open, setOpen] = useState(false)
+interface CreateProjectDialogProps {
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
+function CreateProjectDialog({ open: controlledOpen, onOpenChange: controlledOnOpenChange }: CreateProjectDialogProps = {}) {
+  const isControlled = controlledOpen !== undefined
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = isControlled ? controlledOpen : internalOpen
   const navigate = useNavigate()
   const createProject = useCreateProject()
 
@@ -51,7 +58,7 @@ function CreateProjectDialog() {
       },
       {
         onSuccess: (project) => {
-          setOpen(false)
+          handleOpenChange(false)
           reset()
           navigate(`/projects/${project.id}/dashboard`)
         },
@@ -60,7 +67,11 @@ function CreateProjectDialog() {
   }
 
   function handleOpenChange(nextOpen: boolean) {
-    setOpen(nextOpen)
+    if (isControlled) {
+      controlledOnOpenChange?.(nextOpen)
+    } else {
+      setInternalOpen(nextOpen)
+    }
     if (!nextOpen) {
       reset()
       createProject.reset()
@@ -69,12 +80,14 @@ function CreateProjectDialog() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4" />
-          New Project
-        </Button>
-      </DialogTrigger>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button>
+            <Plus className="h-4 w-4" />
+            New Project
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create Project</DialogTitle>

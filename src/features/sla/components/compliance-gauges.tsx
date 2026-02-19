@@ -9,6 +9,9 @@ interface ComplianceGaugesProps {
 }
 
 function UptimeGauge({ uptime, target }: { uptime: number; target: number }) {
+  const isMeeting = uptime >= target
+  const fillColor = isMeeting ? 'var(--success)' : 'var(--destructive)'
+
   const data = [
     { name: 'uptime', value: uptime },
     { name: 'remaining', value: 100 - uptime },
@@ -36,14 +39,14 @@ function UptimeGauge({ uptime, target }: { uptime: number; target: number }) {
                   dataKey="value"
                   stroke="none"
                 >
-                  <Cell fill="#10b981" />
-                  <Cell fill="#27272a" />
+                  <Cell fill={fillColor} />
+                  <Cell fill="var(--muted)" />
                 </Pie>
               </PieChart>
             </ResponsiveContainer>
           </div>
           <div>
-            <p className="text-2xl font-bold text-success">
+            <p className={cn('text-2xl font-bold', isMeeting ? 'text-success' : 'text-destructive')}>
               {formatPercent(uptime)}
             </p>
             <p className="text-sm text-muted-foreground">Target: {formatPercent(target)}</p>
@@ -67,9 +70,10 @@ function MetricBar({
   formatValue: (v: number) => string
   invertComparison?: boolean
 }) {
-  const ratio = invertComparison
-    ? target > 0 ? Math.min((current / target) * 100, 100) : 0
-    : target > 0 ? Math.min((current / target) * 100, 100) : 0
+  const ratio = target > 0 ? Math.min((current / target) * 100, 100) : 0
+  // For invertComparison metrics (e.g. error rate, response time), meeting = current <= target
+  const isMeeting = invertComparison ? current <= target : current >= target
+  const barColor = isMeeting ? 'var(--success)' : 'var(--destructive)'
 
   return (
     <Card>
@@ -78,7 +82,7 @@ function MetricBar({
       </CardHeader>
       <CardContent>
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold">
+          <span className={cn('text-lg font-bold', isMeeting ? 'text-success' : 'text-destructive')}>
             {formatValue(current)}
           </span>
           <span className="text-sm text-muted-foreground">Target: {formatValue(target)}</span>
@@ -86,7 +90,7 @@ function MetricBar({
         <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
           <div
             className="h-full rounded-full transition-all"
-            style={{ width: `${ratio}%` }}
+            style={{ width: `${ratio}%`, backgroundColor: barColor }}
           />
         </div>
       </CardContent>

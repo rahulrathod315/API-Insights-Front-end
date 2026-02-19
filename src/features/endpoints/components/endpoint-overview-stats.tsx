@@ -77,6 +77,7 @@ export function EndpointOverviewStats({
             value={formatNumber(stats.totalEndpoints)}
             icon={TrendingUp}
             iconClassName="bg-primary/10 text-primary"
+            accentColor="var(--chart-1)"
           />
         </StaggerItem>
         <StaggerItem>
@@ -85,6 +86,7 @@ export function EndpointOverviewStats({
             value={formatNumber(stats.activeEndpoints)}
             icon={CheckCircle}
             iconClassName="bg-success/10 text-success"
+            accentColor="var(--chart-3)"
           />
         </StaggerItem>
         <StaggerItem>
@@ -92,7 +94,8 @@ export function EndpointOverviewStats({
             title="Total Requests"
             value={formatNumber(stats.totalRequests)}
             icon={Activity}
-            iconClassName="bg-chart-1/10 text-chart-1"
+            iconClassName="bg-blue-500/10 text-blue-500"
+            accentColor="#3B82F6"
           />
         </StaggerItem>
         <StaggerItem>
@@ -100,15 +103,17 @@ export function EndpointOverviewStats({
             title="Avg Response"
             value={formatMs(stats.avgResponseTime)}
             icon={Clock}
-            iconClassName="bg-chart-2/10 text-chart-2"
+            iconClassName="bg-primary/10 text-primary"
+            accentColor="var(--chart-2)"
+            invertTrend
           />
         </StaggerItem>
       </StaggerGroup>
 
       {/* Performance Overview Cards */}
-      <Card>
+      <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle>Performance Overview</CardTitle>
+          <CardTitle className="text-sm font-semibold">Performance Distribution</CardTitle>
         </CardHeader>
         <CardContent>
           <StaggerGroup className="grid gap-4 md:grid-cols-3">
@@ -116,27 +121,31 @@ export function EndpointOverviewStats({
               <StatCard
                 title="Fast Endpoints"
                 value={`${stats.fastEndpoints} (${stats.fastPercent.toFixed(0)}%)`}
+                subtitle="Avg response time < 200ms"
                 icon={CheckCircle}
                 iconClassName="bg-success/10 text-success"
-                className="border-success/20"
+                accentColor="var(--chart-3)"
               />
             </StaggerItem>
             <StaggerItem>
               <StatCard
                 title="Normal Endpoints"
                 value={`${stats.normalEndpoints} (${stats.normalPercent.toFixed(0)}%)`}
+                subtitle="Avg response time 200–500ms"
                 icon={Activity}
-                iconClassName="bg-warning/10 text-warning"
-                className="border-warning/20"
+                iconClassName="bg-yellow-500/10 text-yellow-500"
+                accentColor="var(--warning)"
               />
             </StaggerItem>
             <StaggerItem>
               <StatCard
                 title="Slow Endpoints"
                 value={`${stats.slowEndpoints} (${stats.slowPercent.toFixed(0)}%)`}
+                subtitle="Avg response time > 500ms"
                 icon={Clock}
                 iconClassName="bg-destructive/10 text-destructive"
-                className="border-destructive/20"
+                accentColor="var(--destructive)"
+                invertTrend
               />
             </StaggerItem>
           </StaggerGroup>

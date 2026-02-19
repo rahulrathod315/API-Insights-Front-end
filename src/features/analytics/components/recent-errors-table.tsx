@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { DataTable } from '@/components/shared/data-table'
-import { formatFullDateTime } from '@/lib/utils/format'
+import { formatChartTooltip } from '@/lib/utils/format'
 import { useTimezone } from '@/lib/hooks/use-timezone'
 import { AlertCircle, Globe, Clock, Copy, Check } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
@@ -119,7 +119,7 @@ export function RecentErrorsTable({ data, isLoading }: RecentErrorsTableProps) {
           <div className="flex items-center gap-2">
             <Clock className="h-3.5 w-3.5 text-muted-foreground" />
             <span className="text-sm tabular-nums text-muted-foreground">
-              {formatFullDateTime(row.timestamp, tz)}
+              {formatChartTooltip(row.timestamp, tz)}
             </span>
           </div>
         ),

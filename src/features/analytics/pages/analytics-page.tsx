@@ -236,6 +236,7 @@ export default function AnalyticsPage() {
               value={formatNumber(s?.total_requests ?? 0)}
               icon={Activity}
               iconClassName="bg-primary/10 text-primary"
+              accentColor="var(--chart-1)"
             />
           </StaggerItem>
           <StaggerItem>
@@ -248,6 +249,7 @@ export default function AnalyticsPage() {
               )}
               icon={AlertTriangle}
               iconClassName="bg-destructive/10 text-destructive"
+              accentColor="var(--destructive)"
             />
           </StaggerItem>
           <StaggerItem>
@@ -256,6 +258,7 @@ export default function AnalyticsPage() {
               value={formatMs(s?.avg_response_time_ms ?? 0)}
               icon={Clock}
               iconClassName="bg-chart-2/10 text-chart-2"
+              accentColor="var(--chart-2)"
             />
           </StaggerItem>
           <StaggerItem>
@@ -264,6 +267,7 @@ export default function AnalyticsPage() {
               value={formatPercent(s?.success_rate ?? 0)}
               icon={CheckCircle}
               iconClassName="bg-success/10 text-success"
+              accentColor="var(--chart-3)"
             />
           </StaggerItem>
           <StaggerItem>
@@ -272,6 +276,7 @@ export default function AnalyticsPage() {
               value={formatMs(p95)}
               icon={Timer}
               iconClassName="bg-chart-3/10 text-chart-3"
+              accentColor="var(--chart-4)"
             />
           </StaggerItem>
           <StaggerItem>
@@ -280,6 +285,7 @@ export default function AnalyticsPage() {
               value={formatMs(p99)}
               icon={Zap}
               iconClassName="bg-chart-4/10 text-chart-4"
+              accentColor="var(--chart-5)"
             />
           </StaggerItem>
         </StaggerGroup>
@@ -323,18 +329,22 @@ export default function AnalyticsPage() {
         <StatCard
           title="P50 Response Time"
           value={formatMs(p50)}
+          accentColor="var(--chart-3)"
         />
         <StatCard
           title="P90 Response Time"
           value={formatMs(p90)}
+          accentColor="var(--chart-4)"
         />
         <StatCard
           title="P95 Response Time"
           value={formatMs(p95)}
+          accentColor="var(--warning)"
         />
         <StatCard
           title="P99 Response Time"
           value={formatMs(p99)}
+          accentColor="var(--destructive)"
         />
       </div>
 

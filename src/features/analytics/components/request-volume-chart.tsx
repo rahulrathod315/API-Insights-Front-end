@@ -13,65 +13,81 @@ import {
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ChartSkeleton } from '@/components/shared/loading-skeleton'
-import { useChartAnimation } from '@/lib/animation'
-import { formatNumber, formatTimestamp, formatFullDateTime } from '@/lib/utils/format'
+import { formatNumber, formatChartTick, formatChartTooltip } from '@/lib/utils/format'
 import { useTimezone } from '@/lib/hooks/use-timezone'
+import { cn } from '@/lib/utils/cn'
 import type { TimeSeriesPoint } from '../types'
 
 interface RequestVolumeChartProps {
   data: TimeSeriesPoint[]
   isLoading: boolean
   days?: number
+  className?: string
 }
 
 const metrics = [
-  { key: 'request_count', label: 'Total', color: 'var(--chart-1)' },
-  { key: 'success_count', label: 'Success', color: 'var(--chart-1)' },
-  { key: 'error_count', label: 'Errors', color: 'var(--chart-1)' },
+  { key: 'request_count', label: 'Total', color: 'var(--primary)', desc: 'All incoming requests' },
+  { key: 'success_count', label: 'Success', color: 'var(--success)', desc: '2xx responses' },
+  { key: 'error_count', label: 'Errors', color: 'var(--destructive)', desc: '4xx & 5xx responses' },
 ] as const
 
-function RequestVolumeChart({ data, isLoading, days }: RequestVolumeChartProps) {
-  const chartAnimation = useChartAnimation()
+function RequestVolumeChart({ data, isLoading, days, className }: RequestVolumeChartProps) {
   const tz = useTimezone()
   const [metricKey, setMetricKey] = useState<(typeof metrics)[number]['key']>(
     'request_count'
   )
 
   if (isLoading) {
-    return <ChartSkeleton />
+    return <ChartSkeleton className="h-[350px]" />
   }
 
   const activeMetric =
     metrics.find((metric) => metric.key === metricKey) ?? metrics[0]
-  const gradientId = 'volume-gradient'
+  const gradientId = `volume-gradient-${activeMetric.key}`
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <Card className={cn("overflow-hidden border-none shadow-md ring-1 ring-border", className)}>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <div className="space-y-1">
           <CardTitle className="text-base font-semibold">
             Request Volume
           </CardTitle>
-          <div className="flex items-center gap-2">
-            {metrics.map((metric) => (
+          <CardDescription>
+            {activeMetric.desc} over time
+          </CardDescription>
+        </div>
+        <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
+          {metrics.map((metric) => {
+            const isActive = metric.key === metricKey
+            return (
               <Button
                 key={metric.key}
                 type="button"
-                variant={metric.key === metricKey ? 'outline' : 'outline'}
+                variant="ghost"
                 size="sm"
-                className={`h-7 px-2 text-xs ${metric.key === metricKey ? 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 hover:text-primary' : ''}`}
+                className={cn(
+                  "h-7 px-3 text-xs font-medium transition-all",
+                  isActive 
+                    ? "bg-background shadow-sm text-foreground" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
                 onClick={() => setMetricKey(metric.key)}
               >
+                <span 
+                  className="mr-1.5 h-2 w-2 rounded-full" 
+                  style={{ backgroundColor: metric.color }}
+                />
                 {metric.label}
               </Button>
-            ))}
-          </div>
+            )
+          })}
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-4">
         {data.length === 0 ? (
           <div className="flex h-[300px] w-full items-center justify-center text-sm text-muted-foreground">
             No data available for this range.
@@ -81,14 +97,14 @@ function RequestVolumeChart({ data, isLoading, days }: RequestVolumeChartProps) 
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
                 data={data}
-                margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
               >
                 <defs>
                   <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                     <stop
                       offset="5%"
                       stopColor={activeMetric.color}
-                      stopOpacity={0.25}
+                      stopOpacity={0.3}
                     />
                     <stop
                       offset="95%"
@@ -99,39 +115,47 @@ function RequestVolumeChart({ data, isLoading, days }: RequestVolumeChartProps) 
                 </defs>
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  className="stroke-border"
+                  vertical={false}
+                  stroke="var(--border)"
+                  opacity={0.4}
                 />
                 <XAxis
                   dataKey="timestamp"
-                  tickFormatter={(ts: string) => formatTimestamp(ts, days, tz)}
+                  tickFormatter={(ts: string) => formatChartTick(ts, days, tz)}
                   className="text-xs fill-muted-foreground"
                   tickLine={false}
                   axisLine={false}
+                  dy={10}
+                  minTickGap={30}
                 />
                 <YAxis
                   tickFormatter={formatNumber}
                   className="text-xs fill-muted-foreground"
                   tickLine={false}
                   axisLine={false}
-                  width={50}
+                  width={40}
                 />
                 <Tooltip
                   content={({ active, payload, label }) => {
                     if (!active || !payload?.length) return null
                     return (
-                      <div className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
-                        <p className="mb-1 font-medium">
-                          {formatFullDateTime(label as string, tz)}
+                      <div className="rounded-lg border bg-popover p-3 shadow-lg ring-1 ring-border animate-in fade-in-0 zoom-in-95">
+                        <p className="mb-2 text-sm font-medium text-popover-foreground">
+                          {formatChartTooltip(label as string, tz)}
                         </p>
-                        <p>
-                          {activeMetric.label}:{' '}
-                          <span className="font-semibold">
-                            {formatNumber(payload[0].value as number)}
-                          </span>
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="h-2 w-2 rounded-full" 
+                            style={{ backgroundColor: activeMetric.color }} 
+                          />
+                          <p className="text-sm font-bold text-foreground">
+                            {formatNumber(payload[0].value as number)} <span className="text-muted-foreground font-normal text-xs ml-1">{activeMetric.label}</span>
+                          </p>
+                        </div>
                       </div>
                     )
                   }}
+                  cursor={{ stroke: activeMetric.color, strokeWidth: 1, strokeDasharray: '4 4' }}
                 />
                 <Area
                   type="monotone"
@@ -140,8 +164,8 @@ function RequestVolumeChart({ data, isLoading, days }: RequestVolumeChartProps) 
                   strokeWidth={2}
                   fill={`url(#${gradientId})`}
                   dot={false}
-                  activeDot={{ r: 4, fill: activeMetric.color }}
-                  {...chartAnimation}
+                  activeDot={{ r: 4, fill: activeMetric.color, strokeWidth: 2, stroke: "var(--background)" }}
+                  animationDuration={1000}
                 />
               </AreaChart>
             </ResponsiveContainer>

@@ -122,8 +122,8 @@ export function CountryDetailDialog({ countryCode, open, onOpenChange, params }:
                       type="monotone"
                       dataKey="error_count"
                       name="Errors"
-                      fill="var(--chart-3)"
-                      stroke="var(--chart-3)"
+                      fill="var(--destructive)"
+                      stroke="var(--destructive)"
                       fillOpacity={0.3}
                       {...animation}
                     />

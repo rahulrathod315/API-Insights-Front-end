@@ -118,20 +118,20 @@ export function ErrorBudgetTracker({ sla, className }: ErrorBudgetTrackerProps) 
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="rounded-lg border bg-muted/30 p-4">
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-              <TrendingDown className="h-4 w-4" />
+              <TrendingDown className={cn('h-4 w-4', statusColors[analytics.status])} />
               <span>Burn Rate</span>
             </div>
-            <p className="text-2xl font-bold tabular-nums">
+            <p className={cn('text-2xl font-bold tabular-nums', statusColors[analytics.status])}>
               {analytics.burnRate.toFixed(2)}%
             </p>
             <p className="text-xs text-muted-foreground mt-1">per day</p>
           </div>
           <div className="rounded-lg border bg-muted/30 p-4">
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-              <TrendingUp className="h-4 w-4" />
+              <TrendingUp className={cn('h-4 w-4', analytics.status === 'healthy' ? 'text-success' : 'text-muted-foreground')} />
               <span>Remaining</span>
             </div>
-            <p className="text-2xl font-bold tabular-nums">
+            <p className={cn('text-2xl font-bold tabular-nums', analytics.status === 'healthy' ? 'text-success' : 'text-foreground')}>
               {error_budget.remaining_hours.toFixed(1)}h
             </p>
             <p className="text-xs text-muted-foreground mt-1">
@@ -173,13 +173,20 @@ export function ErrorBudgetTracker({ sla, className }: ErrorBudgetTrackerProps) 
                 tickFormatter={(value) => `${value}%`}
               />
               <Tooltip
-                contentStyle={{
-                  backgroundColor: '#18181b',
-                  border: '1px solid #27272a',
-                  borderRadius: '6px',
-                  color: '#fafafa',
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null
+                  const value = payload[0].value as number | undefined
+                  return (
+                    <div className="rounded-lg border bg-popover px-3 py-2 shadow-lg ring-1 ring-border">
+                      <div className="flex items-center gap-2">
+                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: statusColor }} />
+                        <p className="text-sm font-medium text-popover-foreground">
+                          {(value ?? 0).toFixed(1)}% <span className="text-xs font-normal text-muted-foreground ml-1">consumed</span>
+                        </p>
+                      </div>
+                    </div>
+                  )
                 }}
-                formatter={(value: number | undefined) => [`${(value ?? 0).toFixed(1)}%`, 'Consumed']}
               />
               <ReferenceLine
                 y={100}

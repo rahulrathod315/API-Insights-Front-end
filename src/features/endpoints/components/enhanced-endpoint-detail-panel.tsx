@@ -43,7 +43,7 @@ const METHOD_COLORS: Record<string, string> = {
   POST: 'bg-primary/15 text-primary',
   PUT: 'bg-primary/10 text-primary',
   PATCH: 'bg-primary/10 text-primary',
-  DELETE: 'bg-primary/10 text-primary',
+  DELETE: 'bg-destructive/10 text-destructive',
   HEAD: 'bg-primary/10 text-primary',
   OPTIONS: 'bg-muted text-muted-foreground',
 }
@@ -148,6 +148,7 @@ export function EnhancedEndpointDetailPanel({
                       value={formatNumber(summary.total_requests)}
                       icon={Activity}
                       iconClassName="bg-primary/10 text-primary"
+                      accentColor="var(--chart-1)"
                     />
                   </StaggerItem>
                   <StaggerItem>
@@ -156,6 +157,7 @@ export function EnhancedEndpointDetailPanel({
                       value={formatMs(summary.avg_response_time_ms)}
                       icon={Clock}
                       iconClassName="bg-chart-2/10 text-chart-2"
+                      accentColor="var(--chart-2)"
                     />
                   </StaggerItem>
                   <StaggerItem>
@@ -164,6 +166,7 @@ export function EnhancedEndpointDetailPanel({
                       value={formatMs(percentiles?.p95 ?? 0)}
                       icon={Zap}
                       iconClassName="bg-chart-3/10 text-chart-3"
+                      accentColor="var(--chart-3)"
                     />
                   </StaggerItem>
                   <StaggerItem>
@@ -172,6 +175,7 @@ export function EnhancedEndpointDetailPanel({
                       value={formatBytes(summary.avg_response_size_bytes ?? 0)}
                       icon={Database}
                       iconClassName="bg-chart-4/10 text-chart-4"
+                      accentColor="var(--chart-4)"
                     />
                   </StaggerItem>
                 </StaggerGroup>
@@ -240,21 +244,21 @@ export function EnhancedEndpointDetailPanel({
                             <XAxis
                               dataKey="hour"
                               className="text-xs"
-                              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                              tick={{ fill: 'var(--muted-foreground)' }}
                             />
                             <YAxis
                               className="text-xs"
-                              tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                              tick={{ fill: 'var(--muted-foreground)' }}
                             />
                             <Tooltip
                               contentStyle={{
-                                backgroundColor: 'hsl(var(--background))',
-                                border: '1px solid hsl(var(--border))',
+                                backgroundColor: 'var(--background)',
+                                border: '1px solid var(--border)',
                                 borderRadius: '6px',
                               }}
                               formatter={(value: number | undefined) => [formatNumber(value ?? 0), 'Requests']}
                             />
-                            <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="count" fill="var(--primary)" radius={[4, 4, 0, 0]} />
                           </BarChart>
                         </ResponsiveContainer>
                       </CardContent>
@@ -345,7 +349,7 @@ export function EnhancedEndpointDetailPanel({
             </Button>
             <Button
               variant="outline"
-              className="w-full justify-start text-primary hover:text-primary"
+              className="w-full justify-start text-destructive hover:text-destructive"
               onClick={() => onDelete(endpoint)}
             >
               <Trash2 className="mr-2 h-4 w-4" />

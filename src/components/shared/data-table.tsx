@@ -1,23 +1,19 @@
 import { cn } from '@/lib/utils/cn'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { ChevronLeft, ChevronRight, Inbox } from 'lucide-react'
+import { PaginationControls } from '@/components/shared/pagination-controls'
+import { Inbox } from 'lucide-react'
 import { useReducedMotion } from '@/lib/animation'
 import type { ReactNode } from 'react'
+import type { LucideIcon } from 'lucide-react'
 
 interface Column<T> {
   header: string
   accessor: keyof T | string
   cell?: (row: T, index: number) => ReactNode
   className?: string
+  headerClassName?: string
+  sortable?: boolean
 }
 
 interface PaginationConfig {
@@ -25,8 +21,6 @@ interface PaginationConfig {
   pageSize: number
   total: number
 }
-
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
 
 interface DataTableProps<T> {
   columns: Column<T>[]
@@ -37,6 +31,12 @@ interface DataTableProps<T> {
   isLoading?: boolean
   className?: string
   rowKey?: (row: T) => string | number
+  onRowClick?: (row: T) => void
+  rowClassName?: (row: T) => string
+  emptyIcon?: LucideIcon
+  emptyTitle?: string
+  emptyDescription?: string
+  stickyHeader?: boolean
 }
 
 function getNestedValue<T>(obj: T, path: string): unknown {
@@ -48,6 +48,26 @@ function getNestedValue<T>(obj: T, path: string): unknown {
   }, obj)
 }
 
+function TableHead<T>({ columns, stickyHeader }: { columns: Column<T>[]; stickyHeader?: boolean }) {
+  return (
+    <thead className={cn(stickyHeader && 'sticky top-0 z-10')}>
+      <tr className="border-b border-border bg-muted/40">
+        {columns.map((col, i) => (
+          <th
+            key={i}
+            className={cn(
+              'h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground',
+              col.headerClassName ?? col.className
+            )}
+          >
+            {col.header}
+          </th>
+        ))}
+      </tr>
+    </thead>
+  )
+}
+
 function DataTable<T>({
   columns,
   data,
@@ -57,46 +77,28 @@ function DataTable<T>({
   isLoading = false,
   className,
   rowKey,
+  onRowClick,
+  rowClassName,
+  emptyIcon: EmptyIcon = Inbox,
+  emptyTitle = 'No results found',
+  emptyDescription,
+  stickyHeader = false,
 }: DataTableProps<T>) {
   const prefersReducedMotion = useReducedMotion()
-  const totalPages = pagination
-    ? Math.ceil(pagination.total / pagination.pageSize)
-    : 1
-
-  const pageNumbers = pagination
-    ? getPageNumbers(pagination.page, totalPages)
-    : []
-
-  const shouldAnimate = rowKey && !prefersReducedMotion
+  const totalPages = pagination ? Math.ceil(pagination.total / pagination.pageSize) : 1
+  const shouldAnimate = Boolean(rowKey) && !prefersReducedMotion
 
   if (isLoading) {
     return (
       <div className={cn('w-full overflow-auto', className)}>
         <table className="w-full caption-bottom text-sm">
-          <thead>
-            <tr className="border-b">
-              {columns.map((col, i) => (
-                <th
-                  key={i}
-                  className={cn(
-                    'h-12 px-4 text-left align-middle font-medium text-muted-foreground',
-                    col.className
-                  )}
-                >
-                  {col.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
+          <TableHead columns={columns} stickyHeader={stickyHeader} />
           <tbody>
             {Array.from({ length: 5 }).map((_, rowIdx) => (
-              <tr key={rowIdx} className="border-b">
+              <tr key={rowIdx} className="border-b border-border/50">
                 {columns.map((col, colIdx) => (
-                  <td
-                    key={colIdx}
-                    className={cn('p-4 align-middle', col.className)}
-                  >
-                    <Skeleton className="h-4 w-[80%]" />
+                  <td key={colIdx} className={cn('px-4 py-3 align-middle', col.className)}>
+                    <Skeleton className="h-4 rounded-md" style={{ width: `${60 + (colIdx * 13) % 40}%` }} />
                   </td>
                 ))}
               </tr>
@@ -111,25 +113,16 @@ function DataTable<T>({
     return (
       <div className={cn('w-full overflow-auto', className)}>
         <table className="w-full caption-bottom text-sm">
-          <thead>
-            <tr className="border-b">
-              {columns.map((col, i) => (
-                <th
-                  key={i}
-                  className={cn(
-                    'h-12 px-4 text-left align-middle font-medium text-muted-foreground',
-                    col.className
-                  )}
-                >
-                  {col.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
+          <TableHead columns={columns} stickyHeader={stickyHeader} />
         </table>
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <Inbox className="h-10 w-10 text-muted-foreground/50" />
-          <p className="mt-2 text-sm text-muted-foreground">No results found</p>
+        <div className="flex flex-col items-center justify-center gap-2 py-14 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/60">
+            <EmptyIcon className="h-5 w-5 text-muted-foreground/50" />
+          </div>
+          <p className="text-sm font-medium text-foreground">{emptyTitle}</p>
+          {emptyDescription && (
+            <p className="max-w-xs text-xs text-muted-foreground">{emptyDescription}</p>
+          )}
         </div>
       </div>
     )
@@ -139,43 +132,30 @@ function DataTable<T>({
     <div className={cn('w-full', className)}>
       <div className="w-full overflow-auto">
         <table className="w-full caption-bottom text-sm">
-          <thead>
-            <tr className="border-b">
-              {columns.map((col, i) => (
-                <th
-                  key={i}
-                  className={cn(
-                    'h-12 px-4 text-left align-middle font-medium text-muted-foreground',
-                    col.className
-                  )}
-                >
-                  {col.header}
-                </th>
-              ))}
-            </tr>
-          </thead>
+          <TableHead columns={columns} stickyHeader={stickyHeader} />
           <tbody>
             {shouldAnimate ? (
               <AnimatePresence mode="popLayout">
                 {data.map((row, rowIdx) => (
                   <motion.tr
-                    key={rowKey(row)}
-                    className="border-b transition-all duration-150 hover:bg-muted/50 hover:shadow-sm"
+                    key={rowKey!(row)}
+                    className={cn(
+                      'border-b border-border/50 transition-colors duration-100',
+                      'hover:bg-muted/40',
+                      onRowClick && 'cursor-pointer',
+                      rowClassName?.(row)
+                    )}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0, x: -8 }}
-                    transition={{ duration: 0.15 }}
+                    transition={{ duration: 0.12 }}
+                    onClick={() => onRowClick?.(row)}
                   >
                     {columns.map((col, colIdx) => (
-                      <td
-                        key={colIdx}
-                        className={cn('p-4 align-middle', col.className)}
-                      >
+                      <td key={colIdx} className={cn('px-4 py-3 align-middle', col.className)}>
                         {col.cell
                           ? col.cell(row, rowIdx)
-                          : String(
-                              getNestedValue(row, String(col.accessor)) ?? ''
-                            )}
+                          : String(getNestedValue(row, String(col.accessor)) ?? '')}
                       </td>
                     ))}
                   </motion.tr>
@@ -185,18 +165,19 @@ function DataTable<T>({
               data.map((row, rowIdx) => (
                 <tr
                   key={rowKey ? rowKey(row) : rowIdx}
-                  className="border-b transition-all duration-150 hover:bg-muted/50 hover:shadow-sm"
+                  className={cn(
+                    'border-b border-border/50 transition-colors duration-100',
+                    'hover:bg-muted/40',
+                    onRowClick && 'cursor-pointer',
+                    rowClassName?.(row)
+                  )}
+                  onClick={() => onRowClick?.(row)}
                 >
                   {columns.map((col, colIdx) => (
-                    <td
-                      key={colIdx}
-                      className={cn('p-4 align-middle', col.className)}
-                    >
+                    <td key={colIdx} className={cn('px-4 py-3 align-middle', col.className)}>
                       {col.cell
                         ? col.cell(row, rowIdx)
-                        : String(
-                            getNestedValue(row, String(col.accessor)) ?? ''
-                          )}
+                        : String(getNestedValue(row, String(col.accessor)) ?? '')}
                     </td>
                   ))}
                 </tr>
@@ -207,111 +188,17 @@ function DataTable<T>({
       </div>
 
       {pagination && (totalPages > 1 || onPageSizeChange) && (
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-4">
-          <div className="flex items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              Showing{' '}
-              {(pagination.page - 1) * pagination.pageSize + 1} to{' '}
-              {Math.min(pagination.page * pagination.pageSize, pagination.total)}{' '}
-              of {pagination.total} results
-            </p>
-            {onPageSizeChange && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Rows:</span>
-                <Select
-                  value={String(pagination.pageSize)}
-                  onValueChange={(value) => onPageSizeChange(Number(value))}
-                >
-                  <SelectTrigger className="h-8 w-[70px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAGE_SIZE_OPTIONS.map((size) => (
-                      <SelectItem key={size} value={String(size)}>
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-          </div>
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                disabled={pagination.page <= 1}
-                onClick={() => onPageChange?.(pagination.page - 1)}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span className="sr-only">Previous page</span>
-              </Button>
-              {pageNumbers.map((pageNum, idx) =>
-                pageNum === -1 ? (
-                  <span
-                    key={`ellipsis-${idx}`}
-                    className="flex h-8 w-8 items-center justify-center text-sm text-muted-foreground"
-                  >
-                    ...
-                  </span>
-                ) : (
-                  <Button
-                    key={pageNum}
-                    variant={pageNum === pagination.page ? 'default' : 'outline'}
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => onPageChange?.(pageNum)}
-                  >
-                    {pageNum}
-                  </Button>
-                )
-              )}
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                disabled={pagination.page >= totalPages}
-                onClick={() => onPageChange?.(pagination.page + 1)}
-              >
-                <ChevronRight className="h-4 w-4" />
-                <span className="sr-only">Next page</span>
-              </Button>
-            </div>
-          )}
-        </div>
+        <PaginationControls
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
+          onPageChange={(p) => onPageChange?.(p)}
+          onPageSizeChange={onPageSizeChange}
+        />
       )}
     </div>
   )
 }
 
-function getPageNumbers(current: number, total: number): number[] {
-  if (total <= 7) {
-    return Array.from({ length: total }, (_, i) => i + 1)
-  }
-
-  const pages: number[] = [1]
-
-  if (current > 3) {
-    pages.push(-1) // ellipsis
-  }
-
-  const start = Math.max(2, current - 1)
-  const end = Math.min(total - 1, current + 1)
-
-  for (let i = start; i <= end; i++) {
-    pages.push(i)
-  }
-
-  if (current < total - 2) {
-    pages.push(-1) // ellipsis
-  }
-
-  pages.push(total)
-
-  return pages
-}
-
-export { DataTable }
+export { DataTable, getNestedValue }
 export type { Column, PaginationConfig, DataTableProps }

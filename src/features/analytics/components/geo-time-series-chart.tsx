@@ -1,20 +1,33 @@
 import { useMemo } from 'react'
 import {
-  AreaChart,
   Area,
+  AreaChart,
   CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  Tooltip,
   Legend,
-  ResponsiveContainer,
 } from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card'
 import { ChartSkeleton } from '@/components/shared/loading-skeleton'
-import { useChartAnimation } from '@/lib/animation'
-import { formatDateTime } from '@/lib/utils/format'
+import { formatNumber, formatChartTick, formatChartTooltip } from '@/lib/utils/format'
 import { useTimezone } from '@/lib/hooks/use-timezone'
+import { cn } from '@/lib/utils/cn'
 import type { GeoTimeSeriesPoint } from '../types'
+
+interface GeoTimeSeriesChartProps {
+  data: GeoTimeSeriesPoint[]
+  isLoading?: boolean
+  className?: string
+  days?: number
+}
 
 const COLORS = [
   'var(--chart-1)',
@@ -22,113 +35,167 @@ const COLORS = [
   'var(--chart-3)',
   'var(--chart-4)',
   'var(--chart-5)',
-] as const
+]
 
-interface GeoTimeSeriesChartProps {
-  data: GeoTimeSeriesPoint[]
-  isLoading?: boolean
-}
-
-export function GeoTimeSeriesChart({ data, isLoading }: GeoTimeSeriesChartProps) {
-  const animation = useChartAnimation()
+export function GeoTimeSeriesChart({ data, isLoading, className, days }: GeoTimeSeriesChartProps) {
   const tz = useTimezone()
 
-  const { chartData, top5 } = useMemo(() => {
-    // Sum request_count per country across all timestamps
-    const totals = new Map<string, { code: string; name: string; total: number }>()
-    for (const point of data) {
-      for (const c of point.countries) {
-        const existing = totals.get(c.country_code)
-        if (existing) {
-          existing.total += c.request_count
-        } else {
-          totals.set(c.country_code, { code: c.country_code, name: c.country, total: c.request_count })
-        }
-      }
-    }
+  const { chartData, topCountries } = useMemo(() => {
+    if (!data.length) return { chartData: [], topCountries: [] }
 
-    // Get top 5 by total
-    const sorted = [...totals.values()].sort((a, b) => b.total - a.total).slice(0, 5)
-    const top5Codes = sorted.map((s) => s.code)
-    const nameMap = new Map(sorted.map((s) => [s.code, s.name]))
-
-    // Transform data into flat records
-    const chartData = data.map((point) => {
-      const record: Record<string, string | number> = { timestamp: point.timestamp }
-      const countryMap = new Map(point.countries.map((c) => [c.country_code, c.request_count]))
-      for (const code of top5Codes) {
-        record[code] = countryMap.get(code) ?? 0
-      }
-      return record
+    // 1. Calculate total requests per country to find top 5
+    const countryTotals = new Map<string, { name: string, total: number }>()
+    
+    data.forEach(point => {
+      point.countries.forEach(c => {
+        const current = countryTotals.get(c.country_code) || { name: c.country, total: 0 }
+        current.total += c.request_count
+        countryTotals.set(c.country_code, current)
+      })
     })
 
-    return {
-      chartData,
-      top5: sorted.map((s) => ({ code: s.code, name: nameMap.get(s.code) ?? s.code })),
-    }
+    const topCountries = Array.from(countryTotals.entries())
+      .sort((a, b) => b[1].total - a[1].total)
+      .slice(0, 5)
+      .map(([code, { name }]) => ({ code, name }))
+
+    // 2. Transform data for Recharts (stacked area)
+    const chartData = data.map(point => {
+      const entry: any = { timestamp: point.timestamp }
+      let otherTotal = 0
+      
+      point.countries.forEach(c => {
+        if (topCountries.find(tc => tc.code === c.country_code)) {
+          entry[c.country_code] = c.request_count
+        } else {
+          otherTotal += c.request_count
+        }
+      })
+      
+      // Ensure all top countries have a value (0 if missing)
+      topCountries.forEach(tc => {
+        if (entry[tc.code] === undefined) entry[tc.code] = 0
+      })
+      
+      if (otherTotal > 0) {
+        entry.other = otherTotal
+      }
+      
+      return entry
+    })
+
+    return { chartData, topCountries }
   }, [data])
 
   if (isLoading) {
-    return <ChartSkeleton />
-  }
-
-  if (data.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Geographic Traffic Over Time</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="py-8 text-center text-sm text-muted-foreground">No data available</p>
-        </CardContent>
-      </Card>
-    )
+    return <ChartSkeleton className="h-[350px]" />
   }
 
   return (
-    <Card>
+    <Card className={cn("overflow-hidden border-none shadow-md ring-1 ring-border", className)}>
       <CardHeader>
-        <CardTitle className="text-base">Geographic Traffic Over Time</CardTitle>
+        <CardTitle className="text-base font-semibold">
+          Geographic Traffic Trends
+        </CardTitle>
+        <CardDescription>
+          Request volume by top regions over time
+        </CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={350}>
-          <AreaChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-            <XAxis
-              dataKey="timestamp"
-              tickFormatter={(v) => formatDateTime(v, tz)}
-              className="text-xs"
-              tick={{ fill: 'var(--muted-foreground)' }}
-            />
-            <YAxis
-              className="text-xs"
-              tick={{ fill: 'var(--muted-foreground)' }}
-            />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'var(--popover)',
-                border: '1px solid var(--border)',
-                borderRadius: '6px',
-              }}
-              labelFormatter={(v) => formatDateTime(v as string, tz)}
-            />
-            <Legend />
-            {top5.map((country, i) => (
-              <Area
-                key={country.code}
-                type="monotone"
-                dataKey={country.code}
-                name={country.name}
-                stackId="1"
-                fill={COLORS[i]}
-                stroke="var(--background)"
-                strokeWidth={2}
-                fillOpacity={0.8}
-                {...animation}
-              />
-            ))}
-          </AreaChart>
-        </ResponsiveContainer>
+        {chartData.length === 0 ? (
+          <div className="flex h-[300px] w-full items-center justify-center text-sm text-muted-foreground">
+            No geographic data available.
+          </div>
+        ) : (
+          <div className="h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart
+                data={chartData}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  {topCountries.map((country, index) => (
+                    <linearGradient key={country.code} id={`geo-gradient-${country.code}`} x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.8} />
+                      <stop offset="95%" stopColor={COLORS[index % COLORS.length]} stopOpacity={0.1} />
+                    </linearGradient>
+                  ))}
+                </defs>
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  vertical={false}
+                  stroke="var(--border)"
+                  opacity={0.4}
+                />
+                <XAxis
+                  dataKey="timestamp"
+                  tickFormatter={(ts: string) => formatChartTick(ts, days, tz)}
+                  className="text-xs fill-muted-foreground"
+                  tickLine={false}
+                  axisLine={false}
+                  dy={10}
+                  minTickGap={30}
+                />
+                <YAxis
+                  tickFormatter={formatNumber}
+                  className="text-xs fill-muted-foreground"
+                  tickLine={false}
+                  axisLine={false}
+                  width={40}
+                />
+                <Tooltip
+                  content={({ active, payload, label }) => {
+                    if (!active || !payload?.length) return null
+                    // Sort payload by value descending for better readability
+                    const sortedPayload = [...payload].sort((a, b) => Number(b.value) - Number(a.value))
+                    
+                    return (
+                      <div className="rounded-lg border bg-popover p-3 shadow-lg ring-1 ring-border animate-in fade-in-0 zoom-in-95">
+                        <p className="mb-2 text-sm font-medium text-popover-foreground">
+                          {formatChartTooltip(label as string, tz)}
+                        </p>
+                        <div className="space-y-1">
+                          {sortedPayload.map((entry: any) => (
+                            <div key={entry.name} className="flex items-center justify-between gap-4">
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="h-2 w-2 rounded-full" 
+                                  style={{ backgroundColor: entry.color }} 
+                                />
+                                <span className="text-xs text-muted-foreground">{entry.name}</span>
+                              </div>
+                              <span className="text-sm font-bold text-foreground">
+                                {formatNumber(entry.value)}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  }}
+                  cursor={{ stroke: "var(--muted-foreground)", strokeWidth: 1, strokeDasharray: '4 4' }}
+                />
+                <Legend 
+                  iconType="circle" 
+                  wrapperStyle={{ paddingTop: '20px' }}
+                />
+                {topCountries.map((country, index) => (
+                  <Area
+                    key={country.code}
+                    type="monotone"
+                    dataKey={country.code}
+                    name={country.name}
+                    stackId="1"
+                    stroke={COLORS[index % COLORS.length]}
+                    fill={`url(#geo-gradient-${country.code})`}
+                    fillOpacity={1}
+                    animationDuration={1000}
+                  />
+                ))}
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </CardContent>
     </Card>
   )

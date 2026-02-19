@@ -21,14 +21,14 @@ interface ISPWithPercentage extends GeoISP {
 }
 
 const COLORS = [
-  'hsl(var(--chart-1))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
-  'hsl(var(--success))',
-  'hsl(var(--destructive))',
-  'hsl(var(--primary))',
+  'var(--chart-1)',
+  'var(--chart-2)',
+  'var(--chart-3)',
+  'var(--chart-4)',
+  'var(--chart-5)',
+  'var(--success)',
+  'var(--destructive)',
+  'var(--primary)',
 ]
 
 export function GeoISPTable({ isps, isLoading }: GeoISPTableProps) {

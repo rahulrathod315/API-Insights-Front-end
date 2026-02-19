@@ -208,17 +208,17 @@ export function EnhancedAlertHistory({ alert, history, isLoading }: EnhancedAler
                 <XAxis
                   dataKey="timestamp"
                   className="text-xs"
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  tick={{ fill: 'var(--muted-foreground)' }}
                   tickFormatter={(value) => new Date(value).toLocaleDateString()}
                 />
                 <YAxis
                   className="text-xs"
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  tick={{ fill: 'var(--muted-foreground)' }}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'hsl(var(--background))',
-                    border: '1px solid hsl(var(--border))',
+                    backgroundColor: 'var(--background)',
+                    border: '1px solid var(--border)',
                     borderRadius: '6px',
                   }}
                   labelFormatter={(value) => formatDateTime(new Date(value).toISOString(), tz)}
@@ -229,14 +229,14 @@ export function EnhancedAlertHistory({ alert, history, isLoading }: EnhancedAler
                 />
                 <ReferenceLine
                   y={alert.threshold}
-                  stroke="hsl(var(--destructive))"
+                  stroke="var(--destructive)"
                   strokeDasharray="3 3"
                   label="Threshold"
                 />
                 <Line
                   type="monotone"
                   dataKey="value"
-                  stroke="hsl(var(--primary))"
+                  stroke="var(--primary)"
                   strokeWidth={2}
                   dot={{ r: 4 }}
                 />

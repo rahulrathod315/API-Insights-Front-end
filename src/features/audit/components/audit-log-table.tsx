@@ -2,33 +2,30 @@ import { Fragment, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import { DataTable } from '@/components/shared/data-table'
+import { DataTable, getNestedValue } from '@/components/shared/data-table'
+import { PaginationControls } from '@/components/shared/pagination-controls'
 import { cn } from '@/lib/utils/cn'
 import { formatDateTime, formatRelativeTime } from '@/lib/utils/format'
-import { ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronDown, ChevronRight } from 'lucide-react'
 import type { Column, PaginationConfig } from '@/components/shared/data-table'
 import type { AuditLog } from '../types'
 
 const ACTION_BADGE_STYLES: Record<string, string> = {
-  create: 'bg-primary/10 text-primary',
-  update: 'bg-primary/15 text-primary',
-  delete: 'bg-primary/20 text-primary',
+  create: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  update: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  delete: 'bg-destructive/10 text-destructive',
   invite: 'bg-primary/10 text-primary',
-  remove: 'bg-primary/15 text-primary',
-  enable: 'bg-primary/10 text-primary',
-  disable: 'bg-muted text-muted-foreground',
+  remove: 'bg-destructive/10 text-destructive',
+  enable: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  disable: 'bg-muted/60 text-muted-foreground',
+  view: 'bg-muted/60 text-muted-foreground',
+  login: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  logout: 'bg-muted/60 text-muted-foreground',
 }
 
 function getActionBadgeClass(action: string): string {
@@ -57,8 +54,6 @@ function ChangesDetail({ changes }: { changes: AuditLog['changes'] }) {
     </div>
   )
 }
-
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
 
 interface AuditLogTableProps {
   logs: AuditLog[]
@@ -198,15 +193,15 @@ function AuditLogTable({
 
   return (
     <div className="w-full">
-      <div className="w-full overflow-auto">
+      <div className="w-full overflow-auto rounded-lg border border-border/50">
         <table className="w-full caption-bottom text-sm">
           <thead>
-            <tr className="border-b">
+            <tr className="border-b border-border/50 bg-muted/40">
               {columns.map((col, i) => (
                 <th
                   key={i}
                   className={cn(
-                    'h-12 px-4 text-left align-middle font-medium text-muted-foreground',
+                    'h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground',
                     col.className
                   )}
                 >
@@ -222,7 +217,7 @@ function AuditLogTable({
 
               return (
                 <Fragment key={log.id}>
-                  <tr className="border-b transition-colors hover:bg-muted/50">
+                  <tr className="border-b border-border/50 transition-colors hover:bg-muted/40">
                     {columns.map((col, colIdx) => (
                       <td
                         key={colIdx}
@@ -237,7 +232,7 @@ function AuditLogTable({
                     ))}
                   </tr>
                   {isExpanded && hasChanges && (
-                    <tr className="border-b bg-muted/30">
+                    <tr className="border-b border-border/50 bg-muted/20">
                       <td />
                       <td colSpan={columns.length - 1} className="px-4 py-3">
                         <div className="mb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -255,74 +250,16 @@ function AuditLogTable({
       </div>
 
       {pagination && (
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-4">
-          <div className="flex items-center gap-4">
-            <p className="text-sm text-muted-foreground">
-              Showing{' '}
-              {(pagination.page - 1) * pagination.pageSize + 1} to{' '}
-              {Math.min(pagination.page * pagination.pageSize, pagination.total)}{' '}
-              of {pagination.total} results
-            </p>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Rows:</span>
-              <Select
-                value={String(pagination.pageSize)}
-                onValueChange={(value) => {
-                  onPageSizeChange?.(Number(value))
-                }}
-              >
-                <SelectTrigger className="h-8 w-[70px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PAGE_SIZE_OPTIONS.map((size) => (
-                    <SelectItem key={size} value={String(size)}>
-                      {size}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          {Math.ceil(pagination.total / pagination.pageSize) > 1 && (
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                disabled={pagination.page <= 1}
-                onClick={() => onPageChange?.(pagination.page - 1)}
-              >
-                <ChevronLeft className="h-4 w-4" />
-                <span className="sr-only">Previous page</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                disabled={
-                  pagination.page >= Math.ceil(pagination.total / pagination.pageSize)
-                }
-                onClick={() => onPageChange?.(pagination.page + 1)}
-              >
-                <ChevronRight className="h-4 w-4" />
-                <span className="sr-only">Next page</span>
-              </Button>
-            </div>
-          )}
-        </div>
+        <PaginationControls
+          page={pagination.page}
+          pageSize={pagination.pageSize}
+          total={pagination.total}
+          onPageChange={(p) => onPageChange?.(p)}
+          onPageSizeChange={onPageSizeChange}
+        />
       )}
     </div>
   )
-}
-
-function getNestedValue<T>(obj: T, path: string): unknown {
-  return path.split('.').reduce<unknown>((acc, key) => {
-    if (acc && typeof acc === 'object' && key in acc) {
-      return (acc as Record<string, unknown>)[key]
-    }
-    return undefined
-  }, obj)
 }
 
 export { AuditLogTable }

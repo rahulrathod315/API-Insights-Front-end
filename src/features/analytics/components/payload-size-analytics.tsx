@@ -17,7 +17,7 @@ import {
 } from 'recharts'
 import { CardSkeleton } from '@/components/shared/loading-skeleton'
 import { ArrowDownToLine, ArrowUpFromLine, HardDrive, TrendingUp } from 'lucide-react'
-import { formatTimestamp, formatFullDateTime } from '@/lib/utils/format'
+import { formatChartTick, formatChartTooltip } from '@/lib/utils/format'
 import { useTimezone } from '@/lib/hooks/use-timezone'
 import type { TimeSeriesPoint } from '../types'
 
@@ -171,7 +171,7 @@ export function PayloadSizeAnalytics({ data, isLoading, days }: PayloadSizeAnaly
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                 <XAxis
                   dataKey="timestamp"
-                  tickFormatter={(ts: string) => formatTimestamp(ts, days, tz)}
+                  tickFormatter={(ts: string) => formatChartTick(ts, days, tz)}
                   className="text-xs fill-muted-foreground"
                   tickLine={false}
                   axisLine={false}
@@ -190,7 +190,7 @@ export function PayloadSizeAnalytics({ data, isLoading, days }: PayloadSizeAnaly
                     return (
                       <div className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
                         <p className="mb-2 font-medium">
-                          {formatFullDateTime(label as string, tz)}
+                          {formatChartTooltip(label as string, tz)}
                         </p>
                         {payload.map((entry) => (
                           <p key={entry.dataKey as string} className="flex items-center gap-2">

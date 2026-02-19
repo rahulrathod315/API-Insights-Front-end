@@ -1,9 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from '@/components/ui/card'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 import { CardSkeleton } from '@/components/shared/loading-skeleton'
@@ -34,15 +35,15 @@ const CATEGORIES = {
   },
   normal: {
     name: 'Normal',
-    color: 'var(--chart-2)',
+    color: 'var(--warning)',
     icon: TrendingUp,
-    threshold: '100-500ms',
+    threshold: '100–500ms',
   },
   slow: {
     name: 'Slow',
-    color: 'var(--chart-3)',
+    color: 'var(--chart-1)',
     icon: AlertTriangle,
-    threshold: '500-1000ms',
+    threshold: '500–1000ms',
   },
   verySlow: {
     name: 'Very Slow',
@@ -53,10 +54,11 @@ const CATEGORIES = {
 }
 
 export function ResponseTimeCategories({ data, isLoading }: ResponseTimeCategoriesProps) {
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
+
   const categories = useMemo(() => {
     if (data.length === 0) return []
 
-    // Categorize all requests based on avg response time
     let fast = 0
     let normal = 0
     let slow = 0
@@ -78,45 +80,16 @@ export function ResponseTimeCategories({ data, isLoading }: ResponseTimeCategori
     })
 
     const total = fast + normal + slow + verySlow
-
     if (total === 0) return []
 
     const result: CategoryData[] = [
-      {
-        name: CATEGORIES.fast.name,
-        value: fast,
-        percentage: (fast / total) * 100,
-        color: CATEGORIES.fast.color,
-        icon: CATEGORIES.fast.icon,
-        threshold: CATEGORIES.fast.threshold,
-      },
-      {
-        name: CATEGORIES.normal.name,
-        value: normal,
-        percentage: (normal / total) * 100,
-        color: CATEGORIES.normal.color,
-        icon: CATEGORIES.normal.icon,
-        threshold: CATEGORIES.normal.threshold,
-      },
-      {
-        name: CATEGORIES.slow.name,
-        value: slow,
-        percentage: (slow / total) * 100,
-        color: CATEGORIES.slow.color,
-        icon: CATEGORIES.slow.icon,
-        threshold: CATEGORIES.slow.threshold,
-      },
-      {
-        name: CATEGORIES.verySlow.name,
-        value: verySlow,
-        percentage: (verySlow / total) * 100,
-        color: CATEGORIES.verySlow.color,
-        icon: CATEGORIES.verySlow.icon,
-        threshold: CATEGORIES.verySlow.threshold,
-      },
+      { name: CATEGORIES.fast.name, value: fast, percentage: (fast / total) * 100, color: CATEGORIES.fast.color, icon: CATEGORIES.fast.icon, threshold: CATEGORIES.fast.threshold },
+      { name: CATEGORIES.normal.name, value: normal, percentage: (normal / total) * 100, color: CATEGORIES.normal.color, icon: CATEGORIES.normal.icon, threshold: CATEGORIES.normal.threshold },
+      { name: CATEGORIES.slow.name, value: slow, percentage: (slow / total) * 100, color: CATEGORIES.slow.color, icon: CATEGORIES.slow.icon, threshold: CATEGORIES.slow.threshold },
+      { name: CATEGORIES.verySlow.name, value: verySlow, percentage: (verySlow / total) * 100, color: CATEGORIES.verySlow.color, icon: CATEGORIES.verySlow.icon, threshold: CATEGORIES.verySlow.threshold },
     ]
 
-    return result.filter(cat => cat.value > 0)
+    return result.filter((cat) => cat.value > 0)
   }, [data])
 
   if (isLoading) {
@@ -127,30 +100,28 @@ export function ResponseTimeCategories({ data, isLoading }: ResponseTimeCategori
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-base font-semibold">Response Time Categories</CardTitle>
+          <CardTitle className="text-base font-semibold">Response Time Distribution</CardTitle>
+          <CardDescription>Breakdown by performance category</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="py-8 text-center text-sm text-muted-foreground">
-            No data available
-          </p>
+          <p className="py-8 text-center text-sm text-muted-foreground">No data available</p>
         </CardContent>
       </Card>
     )
   }
 
   const total = categories.reduce((sum, cat) => sum + cat.value, 0)
+  const hovered = hoveredIndex !== null ? categories[hoveredIndex] : null
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-base font-semibold">Response Time Distribution</CardTitle>
-        <p className="text-sm text-muted-foreground">
-          Breakdown by performance category
-        </p>
+        <CardDescription>Breakdown by performance category</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
-          {/* Pie Chart */}
+          {/* Donut chart — unified sizing */}
           <div className="h-[240px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -158,37 +129,66 @@ export function ResponseTimeCategories({ data, isLoading }: ResponseTimeCategori
                   data={categories}
                   cx="50%"
                   cy="50%"
-                  labelLine={false}
-                  label={(props: any) => {
-                    const percentage = props.percent * 100
-                    return percentage > 5 ? `${percentage.toFixed(1)}%` : ''
-                  }}
-                  outerRadius={80}
-                  fill="#8884d8"
+                  innerRadius={58}
+                  outerRadius={88}
+                  paddingAngle={3}
+                  cornerRadius={3}
                   dataKey="value"
+                  isAnimationActive={false}
+                  onMouseEnter={(_, index) => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
                 >
                   {categories.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={entry.color}
+                      stroke="var(--background)"
+                      strokeWidth={2}
+                      opacity={hoveredIndex === null || hoveredIndex === index ? 1 : 0.35}
+                    />
                   ))}
                 </Pie>
                 <Tooltip
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null
-                    const data = payload[0].payload as CategoryData
+                    const d = payload[0].payload as CategoryData
                     return (
-                      <div className="rounded-md border bg-popover px-3 py-2 text-sm text-popover-foreground shadow-md">
-                        <p className="font-medium">{data.name}</p>
-                        <p className="text-xs text-muted-foreground">{data.threshold}</p>
-                        <p className="mt-1">
-                          Requests: <span className="font-semibold">{formatNumber(data.value)}</span>
-                        </p>
-                        <p>
-                          Percentage: <span className="font-semibold">{formatPercent(data.percentage)}</span>
-                        </p>
+                      <div className="rounded-lg border bg-popover px-3 py-2 shadow-lg ring-1 ring-border">
+                        <div className="mb-1 flex items-center gap-2">
+                          <span
+                            className="h-2.5 w-2.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: d.color }}
+                          />
+                          <span className="text-sm font-medium text-popover-foreground">{d.name}</span>
+                        </div>
+                        <div className="ml-4 space-y-0.5">
+                          <p className="text-xs text-muted-foreground">{d.threshold}</p>
+                          <p className="text-xs text-muted-foreground">{formatNumber(d.value)} requests</p>
+                          <p className="text-xs text-muted-foreground">{formatPercent(d.percentage)} of total</p>
+                        </div>
                       </div>
                     )
                   }}
                 />
+                {/* Center label */}
+                <text
+                  x="50%"
+                  y="46%"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  style={{ fill: hovered ? hovered.color : 'var(--foreground)', fontSize: 15, fontWeight: 700 }}
+                >
+                  {hovered ? hovered.name : formatNumber(total)}
+                </text>
+                <text
+                  x="50%"
+                  y="57%"
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  style={{ fill: 'var(--muted-foreground)', fontSize: 12 }}
+                >
+                  {hovered ? `${formatPercent(hovered.percentage)}` : 'total'}
+                </text>
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -205,7 +205,7 @@ export function ResponseTimeCategories({ data, isLoading }: ResponseTimeCategori
                   <div className="flex items-center gap-2">
                     <div
                       className="rounded-md p-2"
-                      style={{ backgroundColor: category.color, opacity: 0.2 }}
+                      style={{ backgroundColor: `color-mix(in srgb, ${category.color} 15%, transparent)` }}
                     >
                       <Icon className="h-4 w-4" style={{ color: category.color }} />
                     </div>
@@ -236,8 +236,8 @@ export function ResponseTimeCategories({ data, isLoading }: ResponseTimeCategori
                 <span className="text-muted-foreground">Fast + Normal:</span>
                 <span className="font-medium text-success">
                   {formatPercent(
-                    ((categories.find(c => c.name === 'Fast')?.percentage || 0) +
-                      (categories.find(c => c.name === 'Normal')?.percentage || 0))
+                    (categories.find((c) => c.name === 'Fast')?.percentage || 0) +
+                      (categories.find((c) => c.name === 'Normal')?.percentage || 0)
                   )}
                 </span>
               </div>
@@ -245,8 +245,8 @@ export function ResponseTimeCategories({ data, isLoading }: ResponseTimeCategori
                 <span className="text-muted-foreground">Slow + Very Slow:</span>
                 <span className="font-medium text-destructive">
                   {formatPercent(
-                    ((categories.find(c => c.name === 'Slow')?.percentage || 0) +
-                      (categories.find(c => c.name === 'Very Slow')?.percentage || 0))
+                    (categories.find((c) => c.name === 'Slow')?.percentage || 0) +
+                      (categories.find((c) => c.name === 'Very Slow')?.percentage || 0)
                   )}
                 </span>
               </div>

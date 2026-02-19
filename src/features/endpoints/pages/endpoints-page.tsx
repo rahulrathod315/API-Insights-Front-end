@@ -15,23 +15,23 @@ import { EndpointOverviewStats } from '../components/endpoint-overview-stats'
 import { TimeRangePicker } from '@/features/analytics/components/time-range-picker'
 import { DataFreshnessIndicator } from '@/features/analytics/components/data-freshness-indicator'
 import { useRequestsPerEndpoint } from '@/features/analytics/hooks'
+import { useAnalyticsParams } from '@/features/analytics/analytics-params-context'
 import { formatDate } from '@/lib/utils/format'
 import { useTimezone } from '@/lib/hooks/use-timezone'
 import { Plus, Unplug } from 'lucide-react'
 import type { Endpoint } from '../types'
-import type { AnalyticsParams } from '@/features/analytics/types'
 
 export default function EndpointsPage() {
   const { project } = useProjectContext()
   const { data, isLoading } = useEndpoints(String(project.id), { page: 1, page_size: 1 })
   const deleteMutation = useDeleteEndpoint()
   const tz = useTimezone()
+  const { params: analyticsParams, setParams: setAnalyticsParams } = useAnalyticsParams()
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingEndpoint, setEditingEndpoint] = useState<Endpoint | null>(null)
   const [selectedEndpoint, setSelectedEndpoint] = useState<Endpoint | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Endpoint | null>(null)
-  const [analyticsParams, setAnalyticsParams] = useState<AnalyticsParams>({ days: 7 })
 
   // Fetch analytics data for all endpoints
   const endpointStatsQuery = useRequestsPerEndpoint(String(project.id), analyticsParams)

@@ -236,3 +236,9 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Remove browser focus outline from SVG elements (recharts charts) */
+svg:focus,
+svg:focus-visible {
+  outline: none;
+}
+

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StaggerGroup, StaggerItem } from '@/components/animation/stagger-group'
 import { CardSkeleton } from '@/components/shared/loading-skeleton'
@@ -40,6 +40,8 @@ export function SLAOverviewDashboard({
   allIncidents = [],
   isLoading = false,
 }: SLAOverviewDashboardProps) {
+  const [hoveredRootCause, setHoveredRootCause] = useState<number | null>(null)
+
   const analytics = useMemo(() => {
     const totalSLAs = slas.length
     const meetingSLA = slas.filter((s) => s.compliance.is_meeting_sla).length
@@ -160,24 +162,28 @@ export function SLAOverviewDashboard({
           value={analytics.totalSLAs}
           icon={BarChart3}
           iconClassName="bg-primary/10 text-primary"
+          accentColor="var(--chart-1)"
         />
         <StatCard
           title="Average Uptime"
           value={formatPercent(analytics.avgUptime)}
           icon={TrendingUp}
           iconClassName="bg-success/10 text-success"
+          accentColor="var(--chart-3)"
         />
         <StatCard
           title="Total Incidents"
           value={analytics.totalIncidents}
           icon={AlertTriangle}
           iconClassName="bg-destructive/10 text-destructive"
+          accentColor="var(--destructive)"
         />
         <StatCard
           title="SLAs at Risk"
           value={analytics.slasAtRisk}
           icon={AlertTriangle}
           iconClassName="bg-warning/10 text-warning"
+          accentColor="var(--warning)"
         />
       </div>
 
@@ -263,43 +269,56 @@ export function SLAOverviewDashboard({
             <CardContent>
               {analytics.rootCauseData.length > 0 ? (
                 <>
-                  <ResponsiveContainer width="100%" height={160}>
+                  <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
                       <Pie
                         data={analytics.rootCauseData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={40}
-                        outerRadius={70}
+                        innerRadius={58}
+                        outerRadius={88}
+                        paddingAngle={3}
+                        cornerRadius={3}
                         dataKey="value"
-                        label={false}
+                        isAnimationActive={false}
+                        onMouseEnter={(_, index) => setHoveredRootCause(index)}
+                        onMouseLeave={() => setHoveredRootCause(null)}
                       >
                         {analytics.rootCauseData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={entry.color}
+                            stroke="var(--background)"
+                            strokeWidth={2}
+                            opacity={hoveredRootCause === null || hoveredRootCause === index ? 1 : 0.35}
+                          />
                         ))}
                       </Pie>
                       <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#18181b',
-                          border: '1px solid #27272a',
-                          borderRadius: '6px',
-                          color: '#fafafa',
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null
+                          const d = payload[0]
+                          return (
+                            <div className="rounded-lg border bg-popover px-3 py-2 shadow-lg ring-1 ring-border">
+                              <div className="mb-1 flex items-center gap-2">
+                                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: d.payload.color }} />
+                                <span className="text-sm font-medium text-popover-foreground">{d.name}</span>
+                              </div>
+                              <p className="ml-4 text-xs text-muted-foreground">{d.value} incident{(d.value as number) !== 1 ? 's' : ''}</p>
+                            </div>
+                          )
                         }}
-                        formatter={(value: number | undefined, name: string | undefined) => [`${value ?? 0} incidents`, name ?? '']}
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div className="mt-4 space-y-2">
+                  <div className="mt-2 space-y-2">
                     {analytics.rootCauseData.map((item) => (
                       <div key={item.name} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2">
-                          <div
-                            className="h-3 w-3 rounded-full"
-                            style={{ backgroundColor: item.color }}
-                          />
+                          <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
                           <span className="text-muted-foreground">{item.name}</span>
                         </div>
-                        <span className="font-medium">{item.value}</span>
+                        <span className="font-medium tabular-nums">{item.value}</span>
                       </div>
                     ))}
                   </div>

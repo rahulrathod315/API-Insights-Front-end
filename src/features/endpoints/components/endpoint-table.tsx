@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { PaginationControls } from '@/components/shared/pagination-controls'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 import { EmptyState } from '@/components/shared/empty-state'
 import { TableSkeleton } from '@/components/shared/loading-skeleton'
@@ -18,23 +19,21 @@ import { formatNumber, formatMs } from '@/lib/utils/format'
 import { useEndpoints, useDeleteEndpoint } from '../hooks'
 import { EndpointPerformanceBadge } from './endpoint-performance-badge'
 import { EndpointErrorBadge } from './endpoint-error-badge'
-import { EndpointMiniChart } from './endpoint-mini-chart'
-import { BarChart3, Pencil, Trash2, Search, Unplug, ChevronLeft, ChevronRight } from 'lucide-react'
+import { BarChart3, Pencil, Trash2, Search, Unplug } from 'lucide-react'
 import type { Endpoint } from '../types'
 import type { EndpointStats } from '@/features/analytics/types'
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const
 const DEFAULT_PAGE_SIZE = 10
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
 
 const METHOD_COLORS: Record<string, string> = {
-  GET: 'bg-primary/10 text-primary',
-  POST: 'bg-primary/15 text-primary',
-  PUT: 'bg-primary/10 text-primary',
-  PATCH: 'bg-primary/10 text-primary',
-  DELETE: 'bg-primary/10 text-primary',
-  HEAD: 'bg-primary/10 text-primary',
-  OPTIONS: 'bg-muted text-muted-foreground',
+  GET: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  POST: 'bg-primary/10 text-primary',
+  PUT: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  PATCH: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400',
+  DELETE: 'bg-destructive/10 text-destructive',
+  HEAD: 'bg-muted/60 text-muted-foreground',
+  OPTIONS: 'bg-muted/60 text-muted-foreground',
 }
 
 interface EndpointTableProps {
@@ -67,7 +66,6 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
 
   const endpoints = data?.results ?? []
   const pagination = data?.pagination
-  const totalPages = pagination?.total_pages ?? 1
 
   // Create a map of endpoint stats by ID for quick lookup
   const statsMap = useMemo(() => {
@@ -85,7 +83,7 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
     if (performanceFilter !== 'all') {
       result = result.filter((endpoint) => {
         const stats = getStats(endpoint.id)
-        if (!stats) return false
+        if (!stats || stats.total_requests === 0) return false
         const avgResponse = stats.avg_response_time_ms
 
         if (performanceFilter === 'fast') return avgResponse < 200
@@ -99,7 +97,7 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
     if (errorRateFilter !== 'all') {
       result = result.filter((endpoint) => {
         const stats = getStats(endpoint.id)
-        if (!stats) return false
+        if (!stats || stats.total_requests === 0) return false
         const errorRate = (stats.error_count / stats.total_requests) * 100
 
         if (errorRateFilter === 'healthy') return errorRate < 5
@@ -110,7 +108,7 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
     }
 
     return result
-  }, [endpoints, performanceFilter, errorRateFilter, getStats])
+  }, [endpoints, performanceFilter, errorRateFilter, statsMap])
 
   function handleDelete() {
     if (!deleteTarget) return
@@ -165,11 +163,11 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
     <div className="space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+        <div className="relative min-w-[200px] flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search endpoints..."
-            className="pl-9"
+            className="pl-9 focus-visible:ring-offset-0"
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
           />
@@ -231,35 +229,32 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
         />
       ) : (
         <>
-          <div className="w-full overflow-auto">
+          <div className="w-full overflow-auto rounded-lg border border-border/50">
             <table className="w-full caption-bottom text-sm">
               <thead>
-                <tr className="border-b">
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[80px]">
+                <tr className="border-b border-border/50 bg-muted/40">
+                  <th className="h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[80px]">
                     Method
                   </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                  <th className="h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                     Path
                   </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[100px]">
+                  <th className="h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[100px]">
                     Status
                   </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[180px]">
+                  <th className="h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[180px]">
                     Avg Response
                   </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[100px]">
+                  <th className="h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[100px]">
                     Error Rate
                   </th>
-                  <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[100px]">
+                  <th className="h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[100px]">
                     P95 Latency
                   </th>
-                  <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground w-[100px]">
+                  <th className="h-10 px-4 text-right align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[100px]">
                     Requests
                   </th>
-                  <th className="h-12 px-4 text-center align-middle font-medium text-muted-foreground w-[80px]">
-                    7d Trend
-                  </th>
-                  <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground w-[120px]">
+                  <th className="h-10 px-4 text-right align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[120px]">
                     Actions
                   </th>
                 </tr>
@@ -269,18 +264,11 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
                   const stats = getStats(row.id)
                   const errorRate = stats ? ((stats.error_count / stats.total_requests) * 100) : 0
 
-                  // Generate mock 7-day trend data (in production, this would come from time-series API)
-                  const trendData = stats
-                    ? Array.from({ length: 7 }, () =>
-                        stats.total_requests * (0.8 + Math.random() * 0.4) / 7
-                      )
-                    : []
-
                   return (
                     <tr
                       key={row.id}
                       className={cn(
-                        'border-b transition-colors hover:bg-muted/50',
+                        'border-b border-border/50 transition-colors hover:bg-muted/40',
                         onSelect && 'cursor-pointer'
                       )}
                       onClick={() => onSelect?.(row)}
@@ -337,11 +325,7 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
                           {formatNumber(stats?.total_requests ?? row.request_count)}
                         </span>
                       </td>
-                      <td className="p-4 align-middle">
-                        <div className="flex justify-center">
-                          <EndpointMiniChart data={trendData} />
-                        </div>
-                      </td>
+                      {/* 7d Trend column removed — restore when time-series API is available */}
                       <td className="p-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
                           <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
@@ -369,7 +353,7 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-primary hover:text-primary"
+                            className="h-8 w-8 text-destructive hover:text-destructive"
                             onClick={(e) => {
                               e.stopPropagation()
                               setDeleteTarget(row)
@@ -388,67 +372,15 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
             </table>
           </div>
 
-          {pagination && (totalPages > 1 || true) && (
-            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2">
-              <div className="flex items-center gap-4">
-                <p className="text-sm text-muted-foreground">
-                  Showing{' '}
-                  {(page - 1) * pageSize + 1} to{' '}
-                  {Math.min(page * pageSize, pagination.count)}{' '}
-                  of {pagination.count} results
-                </p>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">Rows:</span>
-                  <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-                    <SelectTrigger className="h-8 w-[70px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PAGE_SIZE_OPTIONS.map((size) => (
-                        <SelectItem key={size} value={String(size)}>
-                          {size}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              {totalPages > 1 && (
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => p - 1)}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    <span className="sr-only">Previous page</span>
-                  </Button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                    <Button
-                      key={p}
-                      variant={p === page ? 'default' : 'outline'}
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={() => setPage(p)}
-                    >
-                      {p}
-                    </Button>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage((p) => p + 1)}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                    <span className="sr-only">Next page</span>
-                  </Button>
-                </div>
-              )}
-            </div>
+          {pagination && (
+            <PaginationControls
+              page={page}
+              pageSize={pageSize}
+              total={pagination.count}
+              onPageChange={setPage}
+              onPageSizeChange={(size) => handlePageSizeChange(String(size))}
+              className="py-2"
+            />
           )}
         </>
       )}

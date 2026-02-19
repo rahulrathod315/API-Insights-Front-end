@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
-import { EmptyState } from '@/components/shared/empty-state'
-import { TableSkeleton } from '@/components/shared/loading-skeleton'
+import { DataTable } from '@/components/shared/data-table'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
 import { AlertStateBadge } from './alert-state-badge'
 import { AlertHealthBadge } from './alert-health-badge'
@@ -10,6 +9,7 @@ import { useUpdateAlert, useDeleteAlert } from '../hooks'
 import { useProjectContext } from '@/features/projects/project-context'
 import { formatRelativeTime } from '@/lib/utils/format'
 import { Bell, Pencil, Trash2 } from 'lucide-react'
+import type { Column } from '@/components/shared/data-table'
 import type { Alert } from '../types'
 
 interface AlertTableProps {
@@ -41,125 +41,116 @@ function AlertTable({ alerts, isLoading, onEdit, onViewHistory }: AlertTableProp
     )
   }
 
-  if (isLoading) {
-    return <TableSkeleton />
-  }
-
-  if (alerts.length === 0) {
-    return (
-      <EmptyState
-        icon={Bell}
-        title="No alerts configured"
-        description="Create an alert to get notified when your API metrics cross a threshold."
-      />
-    )
-  }
+  const columns: Column<Alert>[] = [
+    {
+      header: 'Name',
+      accessor: 'name',
+      cell: (alert) => (
+        <div>
+          <div className="font-medium">{alert.name}</div>
+          {alert.description && (
+            <div className="text-xs text-muted-foreground">{alert.description}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: 'Metric',
+      accessor: 'metric_display',
+    },
+    {
+      header: 'Condition',
+      accessor: 'threshold',
+      cell: (alert) => (
+        <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+          {alert.comparison_display} {alert.threshold}
+        </code>
+      ),
+    },
+    {
+      header: 'Status',
+      accessor: 'status',
+      cell: (alert) => <AlertStateBadge status={alert.status} />,
+    },
+    {
+      header: 'Health Score',
+      accessor: 'health_score',
+      cell: (alert) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <AlertHealthBadge alert={alert} />
+        </div>
+      ),
+    },
+    {
+      header: 'Enabled',
+      accessor: 'is_enabled',
+      cell: (alert) => (
+        <Switch
+          checked={alert.is_enabled}
+          onCheckedChange={() => handleToggleEnabled(alert)}
+          onClick={(e) => e.stopPropagation()}
+          disabled={updateAlert.isPending}
+        />
+      ),
+    },
+    {
+      header: 'Last Triggered',
+      accessor: 'last_triggered_at',
+      cell: (alert) => (
+        <span className="text-muted-foreground">
+          {alert.last_triggered_at
+            ? formatRelativeTime(alert.last_triggered_at)
+            : 'Never'}
+        </span>
+      ),
+    },
+    {
+      header: 'Actions',
+      accessor: 'id',
+      className: 'text-right',
+      cell: (alert) => (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={(e) => {
+              e.stopPropagation()
+              onEdit(alert)
+            }}
+          >
+            <Pencil className="h-4 w-4" />
+            <span className="sr-only">Edit alert</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-destructive hover:text-destructive"
+            onClick={(e) => {
+              e.stopPropagation()
+              setDeleteTarget(alert)
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="sr-only">Delete alert</span>
+          </Button>
+        </div>
+      ),
+    },
+  ]
 
   return (
     <>
-      <div className="w-full overflow-auto">
-        <table className="w-full caption-bottom text-sm">
-          <thead>
-            <tr className="border-b">
-              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                Name
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                Metric
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                Condition
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                Status
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                Health Score
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                Enabled
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                Last Triggered
-              </th>
-              <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {alerts.map((alert) => (
-              <tr
-                key={alert.id}
-                className="border-b transition-colors hover:bg-muted/50 cursor-pointer"
-                onClick={() => onViewHistory(alert)}
-              >
-                <td className="p-4 align-middle">
-                  <div>
-                    <div className="font-medium">{alert.name}</div>
-                    {alert.description && (
-                      <div className="text-xs text-muted-foreground">{alert.description}</div>
-                    )}
-                  </div>
-                </td>
-                <td className="p-4 align-middle">{alert.metric_display}</td>
-                <td className="p-4 align-middle">
-                  <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-                    {alert.comparison_display} {alert.threshold}
-                  </code>
-                </td>
-                <td className="p-4 align-middle">
-                  <AlertStateBadge status={alert.status} />
-                </td>
-                <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
-                  <AlertHealthBadge alert={alert} />
-                </td>
-                <td className="p-4 align-middle">
-                  <Switch
-                    checked={alert.is_enabled}
-                    onCheckedChange={() => handleToggleEnabled(alert)}
-                    onClick={(e) => e.stopPropagation()}
-                    disabled={updateAlert.isPending}
-                  />
-                </td>
-                <td className="p-4 align-middle text-muted-foreground">
-                  {alert.last_triggered_at
-                    ? formatRelativeTime(alert.last_triggered_at)
-                    : 'Never'}
-                </td>
-                <td className="p-4 align-middle text-right">
-                  <div className="flex items-center justify-end gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        onEdit(alert)
-                      }}
-                    >
-                      <Pencil className="h-4 w-4" />
-                      <span className="sr-only">Edit alert</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-primary hover:text-primary"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setDeleteTarget(alert)
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="sr-only">Delete alert</span>
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DataTable<Alert>
+        columns={columns}
+        data={alerts}
+        isLoading={isLoading}
+        rowKey={(a) => a.id}
+        onRowClick={onViewHistory}
+        emptyIcon={Bell}
+        emptyTitle="No alerts configured"
+        emptyDescription="Create an alert to get notified when your API metrics cross a threshold."
+      />
 
       <ConfirmDialog
         open={!!deleteTarget}

@@ -9,16 +9,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { DataTable } from '@/components/shared/data-table'
 import { ConfirmDialog } from '@/components/shared/confirm-dialog'
-import { TableSkeleton } from '@/components/shared/loading-skeleton'
-import { EmptyState } from '@/components/shared/empty-state'
-import { cn } from '@/lib/utils/cn'
 import { formatDate } from '@/lib/utils/format'
 import { useTimezone } from '@/lib/hooks/use-timezone'
 import { useAuth } from '@/lib/auth/auth-context'
 import { useProjectContext } from '@/features/projects/project-context'
 import { useUpdateMemberRole, useRemoveMember } from '../hooks'
 import { RoleBadge } from './role-badge'
+import type { Column } from '@/components/shared/data-table'
 import type { TeamMember } from '../types'
 
 interface MembersTableProps {
@@ -74,117 +73,105 @@ function MembersTable({ members, isLoading, currentUserRole }: MembersTableProps
     )
   }
 
-  if (isLoading) {
-    return <TableSkeleton />
-  }
-
-  if (members.length === 0) {
-    return (
-      <EmptyState
-        title="No team members"
-        description="Invite members to collaborate on this project."
-      />
-    )
-  }
+  const columns: Column<TeamMember>[] = [
+    {
+      header: 'Member',
+      accessor: 'user',
+      cell: (member) => {
+        const isCurrentUser = user?.id === member.user.id
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="text-xs">
+                {getInitials(member.user.first_name, member.user.last_name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium">
+                {member.user.first_name} {member.user.last_name}
+                {isCurrentUser && (
+                  <span className="ml-1.5 text-xs text-muted-foreground">
+                    (you)
+                  </span>
+                )}
+              </p>
+              <p className="truncate text-sm text-muted-foreground">
+                {member.user.email}
+              </p>
+            </div>
+          </div>
+        )
+      },
+    },
+    {
+      header: 'Role',
+      accessor: 'role',
+      cell: (member) => {
+        const showRoleSelect = canChangeRole(currentUserRole, member.role)
+        if (showRoleSelect) {
+          return (
+            <Select
+              value={member.role}
+              onValueChange={(value) => handleRoleChange(member, value)}
+              disabled={updateRoleMutation.isPending}
+            >
+              <SelectTrigger className="h-8 w-[120px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="viewer">Viewer</SelectItem>
+              </SelectContent>
+            </Select>
+          )
+        }
+        return <RoleBadge role={member.role} />
+      },
+    },
+    {
+      header: 'Joined',
+      accessor: 'created_at',
+      cell: (member) => (
+        <span className="text-sm text-muted-foreground">
+          {formatDate(member.created_at, tz)}
+        </span>
+      ),
+    },
+    {
+      header: 'Actions',
+      accessor: 'id',
+      className: 'text-right',
+      cell: (member) => {
+        const isCurrentUser = user?.id === member.user.id
+        const showRemove = canRemoveMember(currentUserRole, member.role) && !isCurrentUser
+        if (!showRemove) return null
+        return (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-primary"
+            onClick={() => setMemberToRemove(member)}
+          >
+            <Trash2 className="h-4 w-4" />
+            <span className="sr-only">Remove member</span>
+          </Button>
+        )
+      },
+    },
+  ]
 
   return (
     <>
-      <div className="w-full overflow-auto">
-        <table className="w-full caption-bottom text-sm">
-          <thead>
-            <tr className="border-b">
-              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                Member
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                Role
-              </th>
-              <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                Joined
-              </th>
-              <th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.map((member) => {
-              const isCurrentUser = user?.id === member.user.id
-              const showRoleSelect = canChangeRole(currentUserRole, member.role)
-              const showRemove = canRemoveMember(currentUserRole, member.role) && !isCurrentUser
-
-              return (
-                <tr
-                  key={member.id}
-                  className={cn(
-                    'border-b transition-colors hover:bg-muted/50',
-                    isCurrentUser && 'bg-muted/30'
-                  )}
-                >
-                  <td className="p-4 align-middle">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="text-xs">
-                          {getInitials(member.user.first_name, member.user.last_name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">
-                          {member.user.first_name} {member.user.last_name}
-                          {isCurrentUser && (
-                            <span className="ml-1.5 text-xs text-muted-foreground">
-                              (you)
-                            </span>
-                          )}
-                        </p>
-                        <p className="truncate text-sm text-muted-foreground">
-                          {member.user.email}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4 align-middle">
-                    {showRoleSelect ? (
-                      <Select
-                        value={member.role}
-                        onValueChange={(value) => handleRoleChange(member, value)}
-                        disabled={updateRoleMutation.isPending}
-                      >
-                        <SelectTrigger className="h-8 w-[120px]">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="admin">Admin</SelectItem>
-                          <SelectItem value="member">Member</SelectItem>
-                          <SelectItem value="viewer">Viewer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    ) : (
-                      <RoleBadge role={member.role} />
-                    )}
-                  </td>
-                  <td className="p-4 align-middle text-sm text-muted-foreground">
-                    {formatDate(member.created_at, tz)}
-                  </td>
-                  <td className="p-4 align-middle text-right">
-                    {showRemove && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-primary"
-                        onClick={() => setMemberToRemove(member)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Remove member</span>
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+      <DataTable<TeamMember>
+        columns={columns}
+        data={members}
+        isLoading={isLoading}
+        rowKey={(m) => m.id}
+        rowClassName={(m) => (user?.id === m.user.id ? 'bg-muted/30' : '')}
+        emptyTitle="No team members"
+        emptyDescription="Invite members to collaborate on this project."
+      />
 
       <ConfirmDialog
         open={!!memberToRemove}

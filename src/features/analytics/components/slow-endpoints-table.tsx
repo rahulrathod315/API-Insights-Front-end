@@ -24,7 +24,7 @@ const METHOD_COLORS: Record<string, string> = {
   POST: 'bg-primary/15 text-primary',
   PUT: 'bg-primary/10 text-primary',
   PATCH: 'bg-primary/10 text-primary',
-  DELETE: 'bg-primary/10 text-primary',
+  DELETE: 'bg-destructive/10 text-destructive',
 }
 
 function getResponseTimeClass(ms: number): string {
@@ -113,13 +113,13 @@ function SlowEndpointsTable({ data, isLoading }: SlowEndpointsTableProps) {
   useMemo(() => { setPage(1) }, [dataLength])
 
   return (
-    <Card>
+    <Card className="flex flex-col">
       <CardHeader>
         <CardTitle className="text-base font-semibold">
           Slow Endpoints
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex-1 p-0">
         <DataTable
           columns={columns}
           data={paginatedData}

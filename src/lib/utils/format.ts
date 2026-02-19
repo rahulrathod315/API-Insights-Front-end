@@ -30,7 +30,7 @@ export function formatPercent(value: number): string {
   return `${value.toFixed(1)}%`
 }
 
-export function formatTimestamp(timestamp: string, days?: number, tz?: string): string {
+export function formatChartTick(timestamp: string, days?: number, tz?: string): string {
   const date = new Date(timestamp)
   if (days && days <= 1) {
     return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: tz || undefined })
@@ -38,7 +38,7 @@ export function formatTimestamp(timestamp: string, days?: number, tz?: string): 
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: tz || undefined })
 }
 
-export function formatFullDateTime(timestamp: string, tz?: string): string {
+export function formatChartTooltip(timestamp: string, tz?: string): string {
   return new Date(timestamp).toLocaleString('en-US', { timeZone: tz || undefined })
 }
 

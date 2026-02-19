@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { Suspense, lazy } from 'react'
 import { ProtectedRoute, PublicRoute } from '@/lib/auth/auth-guard'
 import { AnimateIn } from '@/components/animation'
+import { ErrorBoundary } from '@/components/shared/error-boundary'
+import { PageErrorFallback } from '@/components/shared/page-error-fallback'
 
 // Lazy loaded pages
 const LoginPage = lazy(() => import('@/features/auth/pages/login-page'))
@@ -92,13 +94,15 @@ export function AppRouter() {
           path="/projects/:projectId"
           element={
             <ProtectedRoute>
-              <Suspense fallback={<PageLoader />}>
-                <ProjectContextWrapper>
-                  <AnalyticsParamsWrapper>
-                    <DashboardLayout />
-                  </AnalyticsParamsWrapper>
-                </ProjectContextWrapper>
-              </Suspense>
+              <ErrorBoundary fallback={<PageErrorFallback />}>
+                <Suspense fallback={<PageLoader />}>
+                  <ProjectContextWrapper>
+                    <AnalyticsParamsWrapper>
+                      <DashboardLayout />
+                    </AnalyticsParamsWrapper>
+                  </ProjectContextWrapper>
+                </Suspense>
+              </ErrorBoundary>
             </ProtectedRoute>
           }
         >

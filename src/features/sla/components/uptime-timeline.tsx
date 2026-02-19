@@ -62,7 +62,20 @@ function UptimeTimeline({ projectId, slaId }: UptimeTimelineProps) {
     )
   }
 
-  if (!data) return null
+  if (!data || !data.timeline || data.timeline.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-sm font-medium">Uptime Timeline</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
+            No uptime data available for this period.
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>

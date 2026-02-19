@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { StaggerGroup, StaggerItem } from '@/components/animation/stagger-group'
 import { CardSkeleton } from '@/components/shared/loading-skeleton'
@@ -37,6 +37,8 @@ export function AlertAnalyticsDashboard({
   alerts,
   isLoading = false,
 }: AlertAnalyticsDashboardProps) {
+  const [hoveredPieIndex, setHoveredPieIndex] = useState<number | null>(null)
+
   const analytics = useMemo(() => {
     const totalAlerts = alerts.length
     const triggeredAlerts = alerts.filter((a) => a.status === 'triggered').length
@@ -64,12 +66,14 @@ export function AlertAnalyticsDashboard({
       }
     })
 
-    // Alert type breakdown by metric
-    const metricBreakdown = alerts.reduce((acc, alert) => {
-      const metric = alert.metric_display
-      acc[metric] = (acc[metric] || 0) + 1
-      return acc
-    }, {} as Record<string, number>)
+    // Alert type breakdown by metric — count only triggered alerts
+    const metricBreakdown = alerts
+      .filter((a) => a.last_triggered_at != null)
+      .reduce((acc, alert) => {
+        const metric = alert.metric_display
+        acc[metric] = (acc[metric] || 0) + 1
+        return acc
+      }, {} as Record<string, number>)
 
     const metricBreakdownData = Object.entries(metricBreakdown).map(([name, value]) => ({
       name,
@@ -139,24 +143,28 @@ export function AlertAnalyticsDashboard({
           value={analytics.totalAlerts}
           icon={Bell}
           iconClassName="bg-primary/10 text-primary"
+          accentColor="var(--chart-1)"
         />
         <StatCard
           title="Currently Triggered"
           value={analytics.triggeredAlerts}
           icon={AlertTriangle}
           iconClassName="bg-destructive/10 text-destructive"
+          accentColor="var(--destructive)"
         />
         <StatCard
           title="Avg Resolution Time"
           value={analytics.avgResolutionTime > 0 ? `${Math.round(analytics.avgResolutionTime)}m` : '—'}
           icon={CheckCircle}
           iconClassName="bg-success/10 text-success"
+          accentColor="var(--chart-3)"
         />
         <StatCard
           title="Effectiveness"
           value={`${analytics.alertEffectiveness.toFixed(1)}%`}
           icon={TrendingUp}
-          iconClassName="bg-chart-1/10 text-chart-1"
+          iconClassName="bg-blue-500/10 text-blue-500"
+          accentColor="#3B82F6"
         />
       </div>
 
@@ -223,75 +231,77 @@ export function AlertAnalyticsDashboard({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bell className="h-4 w-4" />
-                Alerts by Metric Type
+                Triggered by Metric Type
               </CardTitle>
             </CardHeader>
             <CardContent>
               {analytics.metricBreakdownData.length > 0 ? (
                 <>
-                  <ResponsiveContainer width="100%" height={160}>
+                  <ResponsiveContainer width="100%" height={200}>
                     <PieChart>
                       <Pie
                         data={analytics.metricBreakdownData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={40}
-                        outerRadius={70}
+                        innerRadius={58}
+                        outerRadius={88}
+                        paddingAngle={3}
+                        cornerRadius={3}
                         dataKey="value"
-                        label={false}
                         isAnimationActive={false}
+                        onMouseEnter={(_, index) => setHoveredPieIndex(index)}
+                        onMouseLeave={() => setHoveredPieIndex(null)}
                       >
                         {analytics.metricBreakdownData.map((_entry, index) => (
                           <Cell
                             key={`cell-${index}`}
                             fill={CHART_COLORS[index % CHART_COLORS.length]}
+                            stroke="var(--background)"
+                            strokeWidth={2}
+                            opacity={hoveredPieIndex === null || hoveredPieIndex === index ? 1 : 0.35}
                           />
                         ))}
                       </Pie>
                       <Tooltip
                         content={({ active, payload }) => {
-                          if (!active || !payload || !payload.length) return null
-                          const data = payload[0]
-                          const color = data.payload.fill || data.fill
+                          if (!active || !payload?.length) return null
+                          const d = payload[0]
+                          const color = CHART_COLORS[analytics.metricBreakdownData.findIndex(item => item.name === d.name) % CHART_COLORS.length]
                           return (
-                            <div
-                              className="rounded-lg border bg-background px-3 py-2 shadow-lg"
-                              style={{ borderColor: color }}
-                            >
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className="h-3 w-3 rounded-full"
-                                  style={{ backgroundColor: color }}
-                                />
-                                <p className="text-sm font-medium text-foreground">{data.name}</p>
+                            <div className="rounded-lg border bg-popover px-3 py-2 shadow-lg ring-1 ring-border">
+                              <div className="mb-1 flex items-center gap-2">
+                                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: color }} />
+                                <span className="text-sm font-medium text-popover-foreground">{d.name}</span>
                               </div>
-                              <p className="ml-5 text-xs text-muted-foreground">
-                                {data.value} alert{data.value !== 1 ? 's' : ''}
-                              </p>
+                              <div className="ml-4">
+                                <p className="text-xs text-muted-foreground">
+                                  {d.value} triggered alert{(d.value as number) !== 1 ? 's' : ''}
+                                </p>
+                              </div>
                             </div>
                           )
                         }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                  <div className="mt-4 space-y-2">
+                  <div className="mt-2 space-y-2">
                     {analytics.metricBreakdownData.map((item, index) => (
                       <div key={item.name} className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2">
                           <div
-                            className="h-3 w-3 rounded-full"
+                            className="h-2.5 w-2.5 rounded-full"
                             style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
                           />
                           <span className="text-muted-foreground">{item.name}</span>
                         </div>
-                        <span className="font-medium">{item.value} alerts</span>
+                        <span className="font-medium tabular-nums">{item.value} triggered</span>
                       </div>
                     ))}
                   </div>
                 </>
               ) : (
                 <div className="flex h-[200px] items-center justify-center text-sm text-muted-foreground">
-                  No alert data available
+                  No triggered alerts yet
                 </div>
               )}
             </CardContent>
@@ -340,9 +350,9 @@ export function AlertAnalyticsDashboard({
                   </div>
                 </div>
               ))}
-              <div className="mt-4 rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
-                <strong>💡 Tip:</strong> Consider adjusting thresholds for frequently triggered
-                alerts to reduce noise and improve signal quality.
+              <div className="mt-4 rounded-lg border border-border/50 bg-muted/30 p-3 text-xs text-muted-foreground">
+                <strong className="text-foreground">Tip:</strong> Consider adjusting thresholds for
+                frequently triggered alerts to reduce noise and improve signal quality.
               </div>
             </div>
           </CardContent>

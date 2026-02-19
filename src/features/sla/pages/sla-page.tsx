@@ -101,19 +101,22 @@ function SlaPage() {
             title="Total SLAs"
             value={dashboard.total_slas}
             icon={Shield}
-            iconClassName="bg-primary/10 text-primary"
+            iconClassName="bg-blue-500/10 text-blue-500"
+            accentColor="#3B82F6"
           />
           <StatCard
             title="Meeting SLA"
             value={dashboard.meeting_sla}
             icon={CheckCircle}
-            iconClassName="bg-primary/10 text-primary"
+            iconClassName="bg-success/10 text-success"
+            accentColor="var(--chart-3)"
           />
           <StatCard
             title="Breaching SLA"
             value={dashboard.breaching_sla}
             icon={XCircle}
-            iconClassName="bg-primary/10 text-primary"
+            iconClassName="bg-destructive/10 text-destructive"
+            accentColor="var(--destructive)"
           />
         </div>
       ) : null}
@@ -149,7 +152,7 @@ function SlaPage() {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-primary hover:text-primary"
+                  className="h-7 w-7 text-destructive hover:text-destructive"
                   onClick={(e) => { e.stopPropagation(); handleDeleteClick(sla.id) }}
                 >
                   <Trash2 className="h-3.5 w-3.5" />

@@ -9,18 +9,11 @@ import { AlertAnalyticsDashboard } from '../components/alert-analytics-dashboard
 import { DataFreshnessIndicator } from '@/features/analytics/components/data-freshness-indicator'
 import { useAlerts, useAlertHistory } from '../hooks'
 import { useProjectContext } from '@/features/projects/project-context'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Plus, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { PaginationControls } from '@/components/shared/pagination-controls'
+import { Plus, X } from 'lucide-react'
 import type { Alert } from '../types'
 
 const DEFAULT_PAGE_SIZE = 10
-const PAGE_SIZE_OPTIONS = [10, 25, 50, 100] as const
 
 export default function AlertsPage() {
   const { project } = useProjectContext()
@@ -29,7 +22,6 @@ export default function AlertsPage() {
   const { data, isLoading, refetch, dataUpdatedAt, isFetching } = useAlerts(String(project.id), { page, page_size: pageSize })
   const alerts = data?.results ?? []
   const pagination = data?.pagination
-  const totalPages = pagination?.total_pages ?? 1
 
   // Fetch all alerts for analytics (without pagination)
   const { data: allAlertsData } = useAlerts(String(project.id), { page: 1, page_size: 1000 })
@@ -96,69 +88,15 @@ export default function AlertsPage() {
         />
 
         {pagination && (
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t px-4 py-4">
-            <div className="flex items-center gap-4">
-              <p className="text-sm text-muted-foreground">
-                Showing{' '}
-                {(page - 1) * pageSize + 1} to{' '}
-                {Math.min(page * pageSize, pagination.count)}{' '}
-                of {pagination.count} alerts
-              </p>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Rows:</span>
-                <Select
-                  value={String(pageSize)}
-                  onValueChange={(value) => { setPageSize(Number(value)); setPage(1) }}
-                >
-                  <SelectTrigger className="h-8 w-[70px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAGE_SIZE_OPTIONS.map((size) => (
-                      <SelectItem key={size} value={String(size)}>
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            {totalPages > 1 && (
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => p - 1)}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  <span className="sr-only">Previous page</span>
-                </Button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                  <Button
-                    key={p}
-                    variant={p === page ? 'default' : 'outline'}
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => setPage(p)}
-                  >
-                    {p}
-                  </Button>
-                ))}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => p + 1)}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                  <span className="sr-only">Next page</span>
-                </Button>
-              </div>
-            )}
-          </div>
+          <PaginationControls
+            page={page}
+            pageSize={pageSize}
+            total={pagination.count}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1) }}
+            itemLabel="alerts"
+            className="border-t"
+          />
         )}
       </Card>
 

@@ -90,7 +90,7 @@ function TransferOwnershipDialog({
             )}
           >
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
-            <p className="text-warning-foreground">
+            <p className="text-warning">
               You will lose owner privileges and become an admin. The new owner
               will have full control over this project, including the ability to
               remove you.
