@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Area,
   AreaChart,
@@ -26,6 +26,7 @@ interface ResponseTimeChartProps {
   data: TimeSeriesPoint[]
   isLoading: boolean
   days?: number
+  granularity?: 'hour' | 'day' | 'week' | 'month'
   className?: string
 }
 
@@ -36,15 +37,54 @@ const series = [
   { key: 'p50', dataKey: 'p50_response_time', label: 'Median', color: 'var(--chart-4)', gradientId: 'rtGrad4', desc: 'Median response time' },
 ] as const
 
-function ResponseTimeChart({ data, isLoading, days, className }: ResponseTimeChartProps) {
+export function ResponseTimeChart({ data, isLoading, days, granularity, className }: ResponseTimeChartProps) {
   const tz = useTimezone()
   const [visibleKeys, setVisibleKeys] = useState<string[]>(['p95', 'avg'])
+
+  // Normalize data: ensure percentiles are correctly mapped regardless of API key naming (shorthand vs full)
+  const chartData = useMemo(() => {
+    if (!data) return []
+    return data.map(point => ({
+      ...point,
+      p50_response_time: point.p50_response_time ?? (point as any).p50 ?? 0,
+      p90_response_time: point.p90_response_time ?? (point as any).p90 ?? 0,
+      p95_response_time: point.p95_response_time ?? (point as any).p95 ?? 0,
+      p99_response_time: point.p99_response_time ?? (point as any).p99 ?? 0,
+    }))
+  }, [data])
 
   const toggleSeries = (key: string) => {
     setVisibleKeys((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
     )
   }
+
+  // Calculate global max for the current dataset across all visible series to fix Y-axis scale.
+  const yAxisMax = useMemo(() => {
+    if (!data || data.length === 0) return 0
+    
+    // Check all dataKeys defined in 'series' that are currently 'visible'
+    const activeDataKeys = series
+      .filter(s => visibleKeys.includes(s.key))
+      .map(s => s.dataKey)
+
+    if (activeDataKeys.length === 0) return 0
+
+    let max = 0
+    data.forEach(point => {
+      activeDataKeys.forEach(key => {
+        const val = (point as any)[key] || 0
+        if (val > max) max = val
+      })
+    })
+    return max
+  }, [data, visibleKeys])
+
+  // Force re-render of chart when data or visible keys change to ensure curve updates
+  const chartKey = useMemo(() => {
+    if (!data || !data.length) return 'empty'
+    return `${visibleKeys.join('-')}-${data.length}-${data[0].timestamp}-${data[data.length - 1].timestamp}`
+  }, [data, visibleKeys])
 
   if (isLoading) {
     return <ChartSkeleton className="h-[350px]" />
@@ -85,14 +125,18 @@ function ResponseTimeChart({ data, isLoading, days, className }: ResponseTimeCha
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        {data.length === 0 ? (
+        {(!data || data.length === 0) ? (
           <div className="flex h-[300px] w-full items-center justify-center text-sm text-muted-foreground">
             No data available for this range.
           </div>
         ) : (
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+              <AreaChart 
+                key={chartKey}
+                data={data} 
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              >
                 <defs>
                   {series.map((item) => (
                     <linearGradient key={item.gradientId} id={item.gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -109,7 +153,7 @@ function ResponseTimeChart({ data, isLoading, days, className }: ResponseTimeCha
                 />
                 <XAxis
                   dataKey="timestamp"
-                  tickFormatter={(ts: string) => formatChartTick(ts, days, tz)}
+                  tickFormatter={(ts: string) => formatChartTick(ts, days, tz, granularity)}
                   className="text-xs fill-muted-foreground"
                   tickLine={false}
                   axisLine={false}
@@ -122,6 +166,7 @@ function ResponseTimeChart({ data, isLoading, days, className }: ResponseTimeCha
                   tickLine={false}
                   axisLine={false}
                   width={40}
+                  domain={[0, yAxisMax > 0 ? yAxisMax * 1.1 : 'auto']}
                 />
                 <Tooltip
                   content={({ active, payload, label }) => {
@@ -165,7 +210,7 @@ function ResponseTimeChart({ data, isLoading, days, className }: ResponseTimeCha
                         fill={`url(#${item.gradientId})`}
                         dot={false}
                         activeDot={{ r: 4, strokeWidth: 2, stroke: 'var(--background)' }}
-                        isAnimationActive={false}
+                        animationDuration={400}
                       />
                     )
                 )}
@@ -177,6 +222,3 @@ function ResponseTimeChart({ data, isLoading, days, className }: ResponseTimeCha
     </Card>
   )
 }
-
-export { ResponseTimeChart }
-export type { ResponseTimeChartProps }

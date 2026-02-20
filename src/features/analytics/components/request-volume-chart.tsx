@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Area,
   AreaChart,
@@ -26,6 +26,7 @@ interface RequestVolumeChartProps {
   data: TimeSeriesPoint[]
   isLoading: boolean
   days?: number
+  granularity?: 'hour' | 'day' | 'week' | 'month'
   className?: string
 }
 
@@ -35,19 +36,34 @@ const metrics = [
   { key: 'error_count', label: 'Errors', color: 'var(--destructive)', desc: '4xx & 5xx responses' },
 ] as const
 
-function RequestVolumeChart({ data, isLoading, days, className }: RequestVolumeChartProps) {
+export function RequestVolumeChart({ data, isLoading, days, granularity, className }: RequestVolumeChartProps) {
   const tz = useTimezone()
   const [metricKey, setMetricKey] = useState<(typeof metrics)[number]['key']>(
     'request_count'
   )
 
+  const activeMetric = useMemo(() => 
+    metrics.find((metric) => metric.key === metricKey) ?? metrics[0],
+    [metricKey]
+  )
+
+  // Force re-render of chart when data or metric changes to ensure curve updates
+  const chartKey = useMemo(() => {
+    if (!data || !data.length) return 'empty'
+    return `${metricKey}-${data.length}-${data[0].timestamp}-${data[data.length - 1].timestamp}`
+  }, [data, metricKey])
+
+  // Calculate global max for the current dataset across all metrics to fix Y-axis scale.
+  const yAxisMax = useMemo(() => {
+    if (!data || data.length === 0) return 0
+    return Math.max(...data.map(d => d.request_count))
+  }, [data])
+  
+  const gradientId = `volume-gradient-${activeMetric.key}`
+
   if (isLoading) {
     return <ChartSkeleton className="h-[350px]" />
   }
-
-  const activeMetric =
-    metrics.find((metric) => metric.key === metricKey) ?? metrics[0]
-  const gradientId = `volume-gradient-${activeMetric.key}`
 
   return (
     <Card className={cn("overflow-hidden border-none shadow-md ring-1 ring-border", className)}>
@@ -88,7 +104,7 @@ function RequestVolumeChart({ data, isLoading, days, className }: RequestVolumeC
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        {data.length === 0 ? (
+        {(!data || data.length === 0) ? (
           <div className="flex h-[300px] w-full items-center justify-center text-sm text-muted-foreground">
             No data available for this range.
           </div>
@@ -96,6 +112,7 @@ function RequestVolumeChart({ data, isLoading, days, className }: RequestVolumeC
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart
+                key={chartKey}
                 data={data}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
               >
@@ -121,7 +138,7 @@ function RequestVolumeChart({ data, isLoading, days, className }: RequestVolumeC
                 />
                 <XAxis
                   dataKey="timestamp"
-                  tickFormatter={(ts: string) => formatChartTick(ts, days, tz)}
+                  tickFormatter={(ts: string) => formatChartTick(ts, days, tz, granularity)}
                   className="text-xs fill-muted-foreground"
                   tickLine={false}
                   axisLine={false}
@@ -134,6 +151,7 @@ function RequestVolumeChart({ data, isLoading, days, className }: RequestVolumeC
                   tickLine={false}
                   axisLine={false}
                   width={40}
+                  domain={[0, yAxisMax > 0 ? yAxisMax * 1.1 : 'auto']}
                 />
                 <Tooltip
                   content={({ active, payload, label }) => {
@@ -165,7 +183,7 @@ function RequestVolumeChart({ data, isLoading, days, className }: RequestVolumeC
                   fill={`url(#${gradientId})`}
                   dot={false}
                   activeDot={{ r: 4, fill: activeMetric.color, strokeWidth: 2, stroke: "var(--background)" }}
-                  animationDuration={1000}
+                  animationDuration={400}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -175,6 +193,3 @@ function RequestVolumeChart({ data, isLoading, days, className }: RequestVolumeC
     </Card>
   )
 }
-
-export { RequestVolumeChart }
-export type { RequestVolumeChartProps }

@@ -200,7 +200,7 @@ export function ResponseTimeCategories({ data, isLoading }: ResponseTimeCategori
               return (
                 <div
                   key={category.name}
-                  className="rounded-lg border bg-card p-3 transition-shadow hover:shadow-md"
+                  className="rounded-lg border bg-background p-3 transition-shadow hover:shadow-md"
                 >
                   <div className="flex items-center gap-2">
                     <div

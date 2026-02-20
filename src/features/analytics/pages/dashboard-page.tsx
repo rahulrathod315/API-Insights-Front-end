@@ -17,8 +17,6 @@ import { useTimezone } from '@/lib/hooks/use-timezone'
 import { cn } from '@/lib/utils/cn'
 import type { AnalyticsParams, DashboardData } from '../types'
 import type { Column } from '@/components/shared/data-table'
-import { ProjectDistributionChart } from '../components/charts/project-distribution-chart'
-import { ProjectPerformanceChart } from '../components/charts/project-performance-chart'
 
 function normalizeDashboardParams(params: AnalyticsParams): AnalyticsParams {
   if (params.start_date && params.end_date) {
@@ -107,39 +105,6 @@ export default function DashboardPage() {
   const maxErrorRate = useMemo(
     () => Math.max(...riskiestProjects.map((p) => p.error_rate), 0.01),
     [riskiestProjects]
-  )
-
-  const distributionData = useMemo(() => {
-    const sorted = [...projects].sort((a, b) => b.request_count - a.request_count)
-    const top = sorted.slice(0, 5)
-    const others = sorted.slice(5)
-    const result = top.map((p, i) => ({
-      name: p.name,
-      value: p.request_count,
-      color: `var(--chart-${(i % 5) + 1})`,
-    }))
-    if (others.length > 0) {
-      result.push({
-        name: 'Others',
-        value: others.reduce((sum, p) => sum + p.request_count, 0),
-        color: 'var(--muted-foreground)',
-      })
-    }
-    return result.filter((d) => d.value > 0)
-  }, [projects])
-
-  const performanceData = useMemo(
-    () =>
-      [...projects]
-        .filter((p) => p.request_count > 0)
-        .sort((a, b) => b.request_count - a.request_count)
-        .slice(0, 10)
-        .map((p) => ({
-          name: p.name,
-          requests: p.request_count,
-          errorRate: (p.error_count / p.request_count) * 100,
-        })),
-    [projects]
   )
 
   const paginatedProjects = useMemo(() => {
@@ -299,16 +264,6 @@ export default function DashboardPage() {
               />
             </StaggerItem>
           </StaggerGroup>
-
-          {/* Charts row */}
-          <div className="grid gap-5 lg:grid-cols-7">
-            <div className="lg:col-span-4">
-              <ProjectPerformanceChart data={performanceData} />
-            </div>
-            <div className="lg:col-span-3">
-              <ProjectDistributionChart data={distributionData} />
-            </div>
-          </div>
 
           {/* Top projects + riskiest */}
           <div className="grid gap-5 lg:grid-cols-2">

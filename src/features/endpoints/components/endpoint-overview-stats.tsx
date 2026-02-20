@@ -119,50 +119,66 @@ export function EndpointOverviewStats({
           <StaggerGroup className="grid gap-4 md:grid-cols-3">
             <StaggerItem>
               <StatCard
-                title="Fast Endpoints"
-                value={`${stats.fastEndpoints} (${stats.fastPercent.toFixed(0)}%)`}
-                subtitle="Avg response time < 200ms"
-                icon={CheckCircle}
-                iconClassName="bg-success/10 text-success"
-                accentColor="var(--chart-3)"
+                title={<span className="text-xs font-bold uppercase tracking-wider text-success">Fast Endpoints</span>}
+                value={
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-foreground">{stats.fastEndpoints}</span>
+                    <span className="rounded-full bg-success/10 px-2 py-0.5 text-[10px] font-bold text-success ring-1 ring-inset ring-success/20">
+                      {stats.fastPercent.toFixed(0)}%
+                    </span>
+                  </div>
+                }
+                description={
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-success" />
+                    <span className="text-[10px] font-medium uppercase text-muted-foreground">Threshold &lt; 200ms</span>
+                  </div>
+                }
+                className="bg-background"
               />
             </StaggerItem>
             <StaggerItem>
               <StatCard
-                title="Normal Endpoints"
-                value={`${stats.normalEndpoints} (${stats.normalPercent.toFixed(0)}%)`}
-                subtitle="Avg response time 200–500ms"
-                icon={Activity}
-                iconClassName="bg-yellow-500/10 text-yellow-500"
-                accentColor="var(--warning)"
+                title={<span className="text-xs font-bold uppercase tracking-wider text-warning">Normal Endpoints</span>}
+                value={
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-foreground">{stats.normalEndpoints}</span>
+                    <span className="rounded-full bg-warning/10 px-2 py-0.5 text-[10px] font-bold text-warning ring-1 ring-inset ring-warning/20">
+                      {stats.normalPercent.toFixed(0)}%
+                    </span>
+                  </div>
+                }
+                description={
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-warning" />
+                    <span className="text-[10px] font-medium uppercase text-muted-foreground">Threshold 200-500ms</span>
+                  </div>
+                }
+                className="bg-background"
               />
             </StaggerItem>
             <StaggerItem>
               <StatCard
-                title="Slow Endpoints"
-                value={`${stats.slowEndpoints} (${stats.slowPercent.toFixed(0)}%)`}
-                subtitle="Avg response time > 500ms"
-                icon={Clock}
-                iconClassName="bg-destructive/10 text-destructive"
-                accentColor="var(--destructive)"
+                title={<span className="text-xs font-bold uppercase tracking-wider text-destructive">Slow Endpoints</span>}
+                value={
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-foreground">{stats.slowEndpoints}</span>
+                    <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-[10px] font-bold text-destructive ring-1 ring-inset ring-destructive/20">
+                      {stats.slowPercent.toFixed(0)}%
+                    </span>
+                  </div>
+                }
+                description={
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-destructive" />
+                    <span className="text-[10px] font-medium uppercase text-muted-foreground">Threshold &gt; 500ms</span>
+                  </div>
+                }
                 invertTrend
+                className="bg-background"
               />
             </StaggerItem>
           </StaggerGroup>
-          <div className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <div className="h-2 w-2 rounded-full bg-success" />
-              <span>Fast: &lt;200ms</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="h-2 w-2 rounded-full bg-warning" />
-              <span>Normal: 200-500ms</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <div className="h-2 w-2 rounded-full bg-destructive" />
-              <span>Slow: &gt;500ms</span>
-            </div>
-          </div>
         </CardContent>
       </Card>
     </div>

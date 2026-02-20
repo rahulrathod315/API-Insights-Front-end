@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -11,6 +12,7 @@ import { cn } from '@/lib/utils/cn'
 import { formatDate, formatNumber, formatMs, formatBytes } from '@/lib/utils/format'
 import { useTimezone } from '@/lib/hooks/use-timezone'
 import { useEndpointMetrics } from '../hooks'
+import { useAnalyticsParams } from '@/features/analytics/analytics-params-context'
 import {
   X,
   BarChart3,
@@ -62,13 +64,20 @@ export function EnhancedEndpointDetailPanel({
   onDelete,
 }: EnhancedEndpointDetailPanelProps) {
   const { project } = useProjectContext()
+  const { params } = useAnalyticsParams()
   const tz = useTimezone()
+
+  // Ensure we don't pass an endpoint_id from global params that might conflict with the URL
+  const metricsParams = useMemo(() => {
+    const { endpoint_id, ...rest } = params
+    return rest
+  }, [params])
 
   // Fetch endpoint analytics data
   const { data: metrics, isLoading } = useEndpointMetrics(
     String(project.id),
     String(endpoint.id),
-    { days: 7 }
+    { ...metricsParams, days: metricsParams.days || 7 }
   )
 
   const summary = metrics?.summary
@@ -145,7 +154,7 @@ export function EnhancedEndpointDetailPanel({
                   <StaggerItem>
                     <StatCard
                       title="Total Requests"
-                      value={formatNumber(summary.total_requests)}
+                      value={formatNumber(summary.total_requests || 0)}
                       icon={Activity}
                       iconClassName="bg-primary/10 text-primary"
                       accentColor="var(--chart-1)"
@@ -154,7 +163,7 @@ export function EnhancedEndpointDetailPanel({
                   <StaggerItem>
                     <StatCard
                       title="Avg Response"
-                      value={formatMs(summary.avg_response_time_ms)}
+                      value={formatMs(summary.avg_response_time_ms || 0)}
                       icon={Clock}
                       iconClassName="bg-chart-2/10 text-chart-2"
                       accentColor="var(--chart-2)"
@@ -172,7 +181,7 @@ export function EnhancedEndpointDetailPanel({
                   <StaggerItem>
                     <StatCard
                       title="Avg Payload"
-                      value={formatBytes(summary.avg_response_size_bytes ?? 0)}
+                      value={formatBytes(summary.avg_response_size_bytes || summary.total_response_size_bytes || 0)}
                       icon={Database}
                       iconClassName="bg-chart-4/10 text-chart-4"
                       accentColor="var(--chart-4)"

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   Area,
   AreaChart,
@@ -29,17 +29,19 @@ interface ErrorRateChartProps {
   className?: string
 }
 
-function ErrorRateChart({ data, isLoading, days, className }: ErrorRateChartProps) {
+export function ErrorRateChart({ data, isLoading, days, className }: ErrorRateChartProps) {
   const tz = useTimezone()
   const [mode, setMode] = useState<'count' | 'rate'>('rate')
+
+  const metric = useMemo(() => mode === 'rate'
+    ? { key: 'error_rate', label: 'Error Rate', format: (v: number) => `${formatPercent(v)}%`, desc: 'Percentage of failed requests' }
+    : { key: 'error_count', label: 'Error Count', format: formatNumber, desc: 'Total number of failed requests' },
+    [mode]
+  )
 
   if (isLoading) {
     return <ChartSkeleton className="h-[350px]" />
   }
-
-  const metric = mode === 'rate'
-    ? { key: 'error_rate', label: 'Error Rate', format: (v: number) => `${formatPercent(v)}%`, desc: 'Percentage of failed requests' }
-    : { key: 'error_count', label: 'Error Count', format: formatNumber, desc: 'Total number of failed requests' }
 
   return (
     <Card className={cn("overflow-hidden border-none shadow-md ring-1 ring-border", className)}>
@@ -84,7 +86,7 @@ function ErrorRateChart({ data, isLoading, days, className }: ErrorRateChartProp
         </div>
       </CardHeader>
       <CardContent className="pt-4">
-        {data.length === 0 ? (
+        {(!data || data.length === 0) ? (
           <div className="flex h-[300px] w-full items-center justify-center text-sm text-muted-foreground">
             No data available for this range.
           </div>
@@ -130,6 +132,7 @@ function ErrorRateChart({ data, isLoading, days, className }: ErrorRateChartProp
                   tickLine={false}
                   axisLine={false}
                   width={40}
+                  domain={[0, 'auto']}
                 />
                 <Tooltip
                   content={({ active, payload, label }) => {
@@ -140,7 +143,10 @@ function ErrorRateChart({ data, isLoading, days, className }: ErrorRateChartProp
                           {formatChartTooltip(label as string, tz)}
                         </p>
                         <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-destructive" />
+                          <div 
+                            className="h-2 w-2 rounded-full" 
+                            style={{ backgroundColor: "var(--destructive)" }} 
+                          />
                           <p className="text-sm font-bold text-foreground">
                             {metric.format(payload[0].value as number)} <span className="text-muted-foreground font-normal text-xs ml-1">{metric.label}</span>
                           </p>
@@ -158,7 +164,7 @@ function ErrorRateChart({ data, isLoading, days, className }: ErrorRateChartProp
                   fill="url(#errorGradient)"
                   dot={false}
                   activeDot={{ r: 4, fill: "var(--destructive)", strokeWidth: 2, stroke: "var(--background)" }}
-                  animationDuration={1000}
+                  animationDuration={400}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -168,6 +174,3 @@ function ErrorRateChart({ data, isLoading, days, className }: ErrorRateChartProp
     </Card>
   )
 }
-
-export { ErrorRateChart }
-export type { ErrorRateChartProps }

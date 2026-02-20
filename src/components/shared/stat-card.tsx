@@ -4,7 +4,7 @@ import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 
 interface StatCardProps {
-  title: string
+  title: ReactNode
   value: ReactNode
   change?: number
   changeLabel?: string
@@ -17,6 +17,8 @@ interface StatCardProps {
    */
   invertTrend?: boolean
   subtitle?: string
+  /** Optional description content displayed between title and value */
+  description?: ReactNode
   /** Optional colored top border accent (CSS color value) */
   accentColor?: string
 }
@@ -31,6 +33,7 @@ function StatCard({
   className,
   invertTrend = false,
   subtitle,
+  description,
   accentColor,
 }: StatCardProps) {
   const hasTrend = change !== undefined && change !== null
@@ -59,9 +62,12 @@ function StatCard({
 
       {/* Header row */}
       <div className="flex items-start justify-between gap-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className={cn(
+          "text-xs font-semibold tracking-wider text-muted-foreground",
+          typeof title === 'string' && "uppercase"
+        )}>
           {title}
-        </p>
+        </div>
         {Icon && (
           <div
             className={cn(
@@ -73,6 +79,11 @@ function StatCard({
           </div>
         )}
       </div>
+
+      {/* Description */}
+      {description && (
+        <div className="mt-1 text-xs text-muted-foreground">{description}</div>
+      )}
 
       {/* Value */}
       <div className="mt-3 flex items-end gap-2">

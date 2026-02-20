@@ -17,23 +17,21 @@ import { TableSkeleton } from '@/components/shared/loading-skeleton'
 import { cn } from '@/lib/utils/cn'
 import { formatNumber, formatMs } from '@/lib/utils/format'
 import { useEndpoints, useDeleteEndpoint } from '../hooks'
-import { EndpointPerformanceBadge } from './endpoint-performance-badge'
-import { EndpointErrorBadge } from './endpoint-error-badge'
-import { BarChart3, Pencil, Trash2, Search, Unplug } from 'lucide-react'
+import { BarChart3, Pencil, Trash2, Search, Unplug, CheckCircle2, Power } from 'lucide-react'
 import type { Endpoint } from '../types'
 import type { EndpointStats } from '@/features/analytics/types'
 
 const HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as const
 const DEFAULT_PAGE_SIZE = 10
 
-const METHOD_COLORS: Record<string, string> = {
-  GET: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
-  POST: 'bg-primary/10 text-primary',
-  PUT: 'bg-blue-500/10 text-blue-600 dark:text-blue-400',
-  PATCH: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400',
-  DELETE: 'bg-destructive/10 text-destructive',
-  HEAD: 'bg-muted/60 text-muted-foreground',
-  OPTIONS: 'bg-muted/60 text-muted-foreground',
+const METHOD_STYLES: Record<string, string> = {
+  GET: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20 dark:text-emerald-400',
+  POST: 'bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400',
+  PUT: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20 dark:text-indigo-400',
+  PATCH: 'bg-amber-500/10 text-amber-600 border-amber-500/20 dark:text-amber-400',
+  DELETE: 'bg-rose-500/10 text-rose-600 border-rose-500/20 dark:text-rose-400',
+  HEAD: 'bg-slate-500/10 text-slate-600 border-slate-500/20 dark:text-slate-400',
+  OPTIONS: 'bg-slate-500/10 text-slate-600 border-slate-500/20 dark:text-slate-400',
 }
 
 interface EndpointTableProps {
@@ -75,9 +73,30 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
   // Helper to get stats for an endpoint
   const getStats = (endpointId: number) => statsMap.get(endpointId)
 
-  // Client-side filtering for performance and error rate (since backend doesn't support these filters)
+  // Client-side filtering for all filters to ensure robustness
   const filteredEndpoints = useMemo(() => {
     let result = [...endpoints]
+
+    // Filter by search query
+    if (search.trim()) {
+      const query = search.toLowerCase().trim()
+      result = result.filter(
+        (endpoint) =>
+          endpoint.path.toLowerCase().includes(query) ||
+          endpoint.name?.toLowerCase().includes(query)
+      )
+    }
+
+    // Filter by HTTP method
+    if (methodFilter !== 'all') {
+      result = result.filter((endpoint) => endpoint.method === methodFilter)
+    }
+
+    // Filter by status (active/inactive)
+    if (statusFilter !== 'all') {
+      const isActive = statusFilter === 'active'
+      result = result.filter((endpoint) => endpoint.is_active === isActive)
+    }
 
     // Filter by performance tier
     if (performanceFilter !== 'all') {
@@ -108,7 +127,7 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
     }
 
     return result
-  }, [endpoints, performanceFilter, errorRateFilter, statsMap])
+  }, [endpoints, search, methodFilter, statusFilter, performanceFilter, errorRateFilter, statsMap])
 
   function handleDelete() {
     if (!deleteTarget) return
@@ -167,13 +186,13 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search endpoints..."
-            className="pl-9 focus-visible:ring-offset-0"
+            className="pl-9 transition-colors focus-visible:border-primary focus-visible:ring-0"
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
           />
         </div>
         <Select value={methodFilter} onValueChange={handleMethodChange}>
-          <SelectTrigger className="w-[130px]">
+          <SelectTrigger className="w-[130px] transition-colors focus:border-primary focus:ring-0">
             <SelectValue placeholder="Method" />
           </SelectTrigger>
           <SelectContent>
@@ -186,7 +205,7 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={handleStatusChange}>
-          <SelectTrigger className="w-[130px]">
+          <SelectTrigger className="w-[130px] transition-colors focus:border-primary focus:ring-0">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -196,7 +215,7 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
           </SelectContent>
         </Select>
         <Select value={performanceFilter} onValueChange={handlePerformanceChange}>
-          <SelectTrigger className="w-[140px]">
+          <SelectTrigger className="w-[140px] transition-colors focus:border-primary focus:ring-0">
             <SelectValue placeholder="Performance" />
           </SelectTrigger>
           <SelectContent>
@@ -207,7 +226,7 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
           </SelectContent>
         </Select>
         <Select value={errorRateFilter} onValueChange={handleErrorRateChange}>
-          <SelectTrigger className="w-[150px]">
+          <SelectTrigger className="w-[150px] transition-colors focus:border-primary focus:ring-0">
             <SelectValue placeholder="Error Rate" />
           </SelectTrigger>
           <SelectContent>
@@ -229,32 +248,32 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
         />
       ) : (
         <>
-          <div className="w-full overflow-auto rounded-lg border border-border/50">
+          <div className="w-full overflow-auto rounded-xl border border-border/40 shadow-sm">
             <table className="w-full caption-bottom text-sm">
               <thead>
-                <tr className="border-b border-border/50 bg-muted/40">
-                  <th className="h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[80px]">
+                <tr className="border-b border-border/40 bg-muted/20">
+                  <th className="h-11 px-4 text-left align-middle text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 w-[80px]">
                     Method
                   </th>
-                  <th className="h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Path
+                  <th className="h-11 px-4 text-left align-middle text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80">
+                    Endpoint Path
                   </th>
-                  <th className="h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[100px]">
+                  <th className="h-11 px-4 text-left align-middle text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 w-[100px]">
                     Status
                   </th>
-                  <th className="h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[180px]">
-                    Avg Response
+                  <th className="h-11 px-4 text-left align-middle text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 w-[140px]">
+                    Avg Latency
                   </th>
-                  <th className="h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[100px]">
+                  <th className="h-11 px-4 text-left align-middle text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 w-[100px]">
                     Error Rate
                   </th>
-                  <th className="h-10 px-4 text-left align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[100px]">
-                    P95 Latency
+                  <th className="h-11 px-4 text-left align-middle text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 w-[100px]">
+                    P95
                   </th>
-                  <th className="h-10 px-4 text-right align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[100px]">
-                    Requests
+                  <th className="h-11 px-4 text-left align-middle text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 w-[100px]">
+                    Traffic
                   </th>
-                  <th className="h-10 px-4 text-right align-middle text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[120px]">
+                  <th className="h-11 px-4 text-right align-middle text-[10px] font-bold uppercase tracking-widest text-muted-foreground/80 w-[120px]">
                     Actions
                   </th>
                 </tr>
@@ -277,51 +296,63 @@ function EndpointTable({ projectId, onEdit, onSelect, endpointStats = [] }: Endp
                         <Badge
                           variant="outline"
                           className={cn(
-                            'border-0 font-mono text-xs font-bold',
-                            METHOD_COLORS[row.method]
+                            'font-mono text-[10px] font-bold uppercase tracking-wider px-2 py-0',
+                            METHOD_STYLES[row.method]
                           )}
                         >
                           {row.method}
                         </Badge>
                       </td>
                       <td className="p-4 align-middle">
-                        <div>
-                          <div className="font-mono text-sm">{row.path}</div>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-foreground text-sm tracking-tight">{row.path}</span>
                           {row.name && (
-                            <div className="text-xs text-muted-foreground">{row.name}</div>
+                            <span className="text-[11px] text-muted-foreground font-medium">{row.name}</span>
                           )}
                         </div>
                       </td>
                       <td className="p-4 align-middle">
-                        <Badge variant={row.is_active ? 'success' : 'secondary'}>
-                          {row.is_active ? 'Active' : 'Inactive'}
+                        <Badge 
+                          variant={row.is_active ? "success" : "secondary"}
+                          className="gap-1.5 px-2 py-0.5"
+                        >
+                          {row.is_active ? (
+                            <CheckCircle2 className="h-3 w-3" />
+                          ) : (
+                            <Power className="h-3 w-3" />
+                          )}
+                          <span className="capitalize">{row.is_active ? 'Active' : 'Inactive'}</span>
                         </Badge>
                       </td>
                       <td className="p-4 align-middle">
                         {stats ? (
-                          <EndpointPerformanceBadge responseTime={stats.avg_response_time_ms} />
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </td>
-                      <td className="p-4 align-middle">
-                        {stats ? (
-                          <EndpointErrorBadge errorRate={errorRate} />
-                        ) : (
-                          <span className="text-xs text-muted-foreground">—</span>
-                        )}
-                      </td>
-                      <td className="p-4 align-middle">
-                        {stats ? (
-                          <span className="font-mono text-sm tabular-nums">
+                          <span className="text-sm font-semibold tabular-nums text-foreground">
                             {formatMs(stats.avg_response_time_ms)}
                           </span>
                         ) : (
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </td>
-                      <td className="p-4 align-middle text-right">
-                        <span className="text-sm tabular-nums">
+                      <td className="p-4 align-middle">
+                        {stats ? (
+                          <span className="text-sm font-semibold tabular-nums text-foreground">
+                            {errorRate.toFixed(1)}%
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="p-4 align-middle">
+                        {stats ? (
+                          <span className="text-sm font-medium tabular-nums text-muted-foreground">
+                            {formatMs(stats.avg_response_time_ms)}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="p-4 align-middle text-left">
+                        <span className="text-sm font-bold tabular-nums text-foreground/80">
                           {formatNumber(stats?.total_requests ?? row.request_count)}
                         </span>
                       </td>

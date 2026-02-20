@@ -23,7 +23,14 @@ export interface ExportParams {
 export interface DashboardData {
   period: { days: number; start_date: string; end_date: string }
   totals: { projects: number; total_requests: number; total_errors: number; error_rate: number }
-  projects: Array<{ id: number; name: string; request_count: number; error_count: number; endpoint_count: number }>
+  projects: Array<{
+    id: number
+    name: string
+    request_count: number
+    error_count: number
+    endpoint_count: number
+    avg_response_time_ms: number
+  }>
 }
 
 export interface ProjectSummary {
@@ -152,6 +159,7 @@ export interface EndpointMetrics {
   }
   percentiles: { p50: number; p90: number; p95: number; p99: number }
   status_distribution: Array<{ status_code: number; count: number }>
+  status_breakdown?: Record<string, number>
   hourly_distribution: Array<{ hour: string; count: number; avg_response_time: number }>
   recent_errors: Array<{ id: number; status_code: number; error_message: string; timestamp: string; ip_address: string }>
 }
