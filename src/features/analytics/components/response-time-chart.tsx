@@ -39,7 +39,7 @@ const series = [
 
 export function ResponseTimeChart({ data, isLoading, days, granularity, className }: ResponseTimeChartProps) {
   const tz = useTimezone()
-  const [visibleKeys, setVisibleKeys] = useState<string[]>(['p95', 'avg'])
+  const [visibleKeys, setVisibleKeys] = useState<string[]>(['p95', 'p99', 'avg', 'p50'])
 
   // Normalize data: ensure percentiles are correctly mapped regardless of API key naming (shorthand vs full)
   const chartData = useMemo(() => {
@@ -61,8 +61,8 @@ export function ResponseTimeChart({ data, isLoading, days, granularity, classNam
 
   // Calculate global max for the current dataset across all visible series to fix Y-axis scale.
   const yAxisMax = useMemo(() => {
-    if (!data || data.length === 0) return 0
-    
+    if (!chartData || chartData.length === 0) return 0
+
     // Check all dataKeys defined in 'series' that are currently 'visible'
     const activeDataKeys = series
       .filter(s => visibleKeys.includes(s.key))
@@ -71,14 +71,14 @@ export function ResponseTimeChart({ data, isLoading, days, granularity, classNam
     if (activeDataKeys.length === 0) return 0
 
     let max = 0
-    data.forEach(point => {
+    chartData.forEach(point => {
       activeDataKeys.forEach(key => {
         const val = (point as any)[key] || 0
         if (val > max) max = val
       })
     })
     return max
-  }, [data, visibleKeys])
+  }, [chartData, visibleKeys])
 
   // Force re-render of chart when data or visible keys change to ensure curve updates
   const chartKey = useMemo(() => {
@@ -132,9 +132,9 @@ export function ResponseTimeChart({ data, isLoading, days, granularity, classNam
         ) : (
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart 
+              <AreaChart
                 key={chartKey}
-                data={data} 
+                data={chartData}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
               >
                 <defs>

@@ -2,22 +2,18 @@ import { useState, useMemo } from 'react'
 import { Download } from 'lucide-react'
 import { differenceInCalendarDays, isValid, parseISO, subDays } from 'date-fns'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 import { PageHeader } from '@/components/shared/page-header'
-import { StatCard } from '@/components/shared/stat-card'
-import { CardSkeleton } from '@/components/shared/loading-skeleton'
-import { StaggerGroup, StaggerItem } from '@/components/animation'
 import { useProjectContext } from '@/features/projects/project-context'
 import { TimeRangePicker } from '../components/time-range-picker'
 import { ExportDialog } from '../components/export-dialog'
 import { RequestVolumeChart } from '../components/request-volume-chart'
-import { ErrorRateChart } from '../components/error-rate-chart'
-import { ResponseTimeChart } from '../components/response-time-chart'
 import { StatusBreakdown } from '../components/status-breakdown'
 import { TopEndpointsTable } from '../components/top-endpoints-table'
 import { ComparisonSummaryHeader } from '../components/comparison-summary-header'
 import { DataFreshnessIndicator } from '../components/data-freshness-indicator'
 import { ResponseTimeCategories } from '../components/response-time-categories'
-import { ResponseTimeDistribution } from '../components/response-time-distribution'
 import { SlowEndpointsTable } from '../components/slow-endpoints-table'
 import { UserAgentBreakdown } from '../components/user-agent-breakdown'
 import { ErrorClusters } from '../components/error-clusters'
@@ -43,7 +39,6 @@ import { exportData } from '../api'
 import { formatNumber, formatMs, formatPercent, formatDate } from '@/lib/utils/format'
 import { useTimezone } from '@/lib/hooks/use-timezone'
 import type { AnalyticsParams, ExportParams } from '../types'
-import { Activity, AlertTriangle, Clock, CheckCircle, Zap, Timer } from 'lucide-react'
 
 function normalizeAnalyticsParams(params: AnalyticsParams): AnalyticsParams {
   if (params.start_date && params.end_date) {
@@ -144,9 +139,6 @@ export default function AnalyticsPage() {
     comparison.refetch()
   }
 
-  const s = summary.data?.summary
-  const isLoading = summary.isLoading
-
   // Calculate aggregate stats with safety checks
   const timeSeriesData = timeSeries.data?.data ?? []
   const p50 = timeSeriesData.length > 0
@@ -199,6 +191,16 @@ export default function AnalyticsPage() {
               }
             : undefined
         }
+        successRate={
+          comparison.data
+            ? (() => {
+                const current = 100 - comparison.data.current_period.metrics.error_rate
+                const previous = 100 - comparison.data.previous_period.metrics.error_rate
+                const change = previous > 0 ? ((current - previous) / previous) * 100 : 0
+                return { current, previous, change }
+              })()
+            : undefined
+        }
         errorRate={
           comparison.data
             ? {
@@ -221,131 +223,111 @@ export default function AnalyticsPage() {
         isLoading={comparison.isLoading}
       />
 
-      {/* Core Metrics */}
-      {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <CardSkeleton key={i} />
-          ))}
-        </div>
-      ) : (
-        <StaggerGroup className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StaggerItem>
-            <StatCard
-              title="Total Requests"
-              value={formatNumber(s?.total_requests ?? 0)}
-              icon={Activity}
-              iconClassName="bg-primary/10 text-primary"
-              accentColor="var(--chart-1)"
-            />
-          </StaggerItem>
-          <StaggerItem>
-            <StatCard
-              title="Error Rate"
-              value={formatPercent(
-                s && s.total_requests > 0
-                  ? (s.error_requests / s.total_requests) * 100
-                  : 0
-              )}
-              icon={AlertTriangle}
-              iconClassName="bg-destructive/10 text-destructive"
-              accentColor="var(--destructive)"
-            />
-          </StaggerItem>
-          <StaggerItem>
-            <StatCard
-              title="Avg Response"
-              value={formatMs(s?.avg_response_time_ms ?? 0)}
-              icon={Clock}
-              iconClassName="bg-chart-2/10 text-chart-2"
-              accentColor="var(--chart-2)"
-            />
-          </StaggerItem>
-          <StaggerItem>
-            <StatCard
-              title="Success Rate"
-              value={formatPercent(s?.success_rate ?? 0)}
-              icon={CheckCircle}
-              iconClassName="bg-success/10 text-success"
-              accentColor="var(--chart-3)"
-            />
-          </StaggerItem>
-          <StaggerItem>
-            <StatCard
-              title="P95 Latency"
-              value={formatMs(p95)}
-              icon={Timer}
-              iconClassName="bg-chart-3/10 text-chart-3"
-              accentColor="var(--chart-4)"
-            />
-          </StaggerItem>
-          <StaggerItem>
-            <StatCard
-              title="P99 Latency"
-              value={formatMs(p99)}
-              icon={Zap}
-              iconClassName="bg-chart-4/10 text-chart-4"
-              accentColor="var(--chart-5)"
-            />
-          </StaggerItem>
-        </StaggerGroup>
-      )}
-
       {/* Time Series Charts - Primary Metrics */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <RequestVolumeChart
-          data={timeSeriesData}
-          isLoading={timeSeries.isLoading}
-          days={normalizedParams.days}
-        />
-        <ErrorRateChart
-          data={timeSeriesData}
-          isLoading={timeSeries.isLoading}
-          days={normalizedParams.days}
-        />
-      </div>
-
-      {/* Response Time Analysis */}
-      <ResponseTimeChart
+      <RequestVolumeChart
         data={timeSeriesData}
         isLoading={timeSeries.isLoading}
         days={normalizedParams.days}
       />
 
-      {/* Performance Distribution & Categories */}
+      {/* Response Time Distribution & Percentiles */}
       <div className="grid gap-6 lg:grid-cols-2">
         <ResponseTimeCategories
           data={timeSeriesData}
           isLoading={timeSeries.isLoading}
         />
-        <ResponseTimeDistribution
-          data={timeSeriesData}
-          isLoading={timeSeries.isLoading}
-        />
-      </div>
+        {(() => {
+          const percentiles = [
+            { label: 'P50', sublabel: 'Median', value: p50, color: 'var(--chart-3)' },
+            { label: 'P90', sublabel: '90th percentile', value: p90, color: 'var(--chart-4)' },
+            { label: 'P95', sublabel: '95th percentile', value: p95, color: 'var(--warning)' },
+            { label: 'P99', sublabel: '99th percentile', value: p99, color: 'var(--destructive)' },
+          ]
+          const total = p50 + p90 + p95 + p99
+          return (
+            <Card className="flex flex-col h-full border-none shadow-md ring-1 ring-border">
+              <CardHeader>
+                <CardTitle className="text-base font-semibold">Response Time Percentiles</CardTitle>
+                <CardDescription>Proportional breakdown across P50 · P90 · P95 · P99</CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-1 flex-col gap-4">
+                {/* Donut chart */}
+                <div className="h-[220px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={percentiles}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={90}
+                        paddingAngle={3}
+                        cornerRadius={3}
+                        dataKey="value"
+                        isAnimationActive={false}
+                      >
+                        {percentiles.map((entry, i) => (
+                          <Cell
+                            key={i}
+                            fill={entry.color}
+                            stroke="var(--background)"
+                            strokeWidth={2}
+                          />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null
+                          const d = payload[0].payload
+                          return (
+                            <div className="rounded-lg border bg-popover px-3 py-2 shadow-lg ring-1 ring-border">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
+                                <span className="text-sm font-semibold text-popover-foreground">{d.label}</span>
+                                <span className="text-xs text-muted-foreground">{d.sublabel}</span>
+                              </div>
+                              <p className="font-mono text-sm font-bold" style={{ color: d.color }}>{formatMs(d.value)}</p>
+                              <p className="text-xs text-muted-foreground">{total > 0 ? ((d.value / total) * 100).toFixed(1) : 0}% of total</p>
+                            </div>
+                          )
+                        }}
+                      />
+                      {/* Center label */}
+                      <text x="50%" y="46%" textAnchor="middle" dominantBaseline="middle"
+                        style={{ fill: 'var(--foreground)', fontSize: 15, fontWeight: 700 }}>
+                        {formatMs(p99)}
+                      </text>
+                      <text x="50%" y="57%" textAnchor="middle" dominantBaseline="middle"
+                        style={{ fill: 'var(--muted-foreground)', fontSize: 11 }}>
+                        P99 max
+                      </text>
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
 
-      {/* Percentile Breakdown */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="P50 Response Time"
-          value={formatMs(p50)}
-          accentColor="var(--chart-3)"
-        />
-        <StatCard
-          title="P90 Response Time"
-          value={formatMs(p90)}
-          accentColor="var(--chart-4)"
-        />
-        <StatCard
-          title="P95 Response Time"
-          value={formatMs(p95)}
-          accentColor="var(--warning)"
-        />
-        <StatCard
-          title="P99 Response Time"
-          value={formatMs(p99)}
-          accentColor="var(--destructive)"
-        />
+                {/* Legend rows */}
+                <div className="grid grid-cols-2 gap-2">
+                  {percentiles.map((item) => (
+                    <div key={item.label} className="flex items-center gap-2 rounded-lg border bg-muted/20 px-3 py-2">
+                      <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold" style={{ color: item.color }}>{item.label}</p>
+                        <p className="text-[10px] text-muted-foreground truncate">{item.sublabel}</p>
+                      </div>
+                      <span className="font-mono text-xs font-bold tabular-nums">{formatMs(item.value)}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* P99 / P50 ratio summary */}
+                <div className="mt-auto flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2">
+                  <span className="text-xs text-muted-foreground">Tail latency ratio (P99 / P50)</span>
+                  <span className="font-mono text-sm font-bold">{p50 > 0 ? `${(p99 / p50).toFixed(1)}×` : '—'}</span>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })()}
       </div>
 
       {/* Traffic & Status Analysis */}

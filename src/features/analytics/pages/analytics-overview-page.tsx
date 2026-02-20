@@ -1,12 +1,25 @@
 import { useMemo } from 'react'
 import { differenceInCalendarDays, isValid, parseISO, subDays } from 'date-fns'
 import { Link } from 'react-router-dom'
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle,
+  Clock,
+  Globe,
+  TrendingUp,
+  Users,
+  Zap,
+} from 'lucide-react'
 import { PageHeader } from '@/components/shared/page-header'
+import { StatCard } from '@/components/shared/stat-card'
+import { CardSkeleton } from '@/components/shared/loading-skeleton'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useProjectContext } from '@/features/projects/project-context'
 import { TimeRangePicker } from '../components/time-range-picker'
 import { ComparisonSummaryHeader } from '../components/comparison-summary-header'
-import { OverviewStats } from '../components/overview-stats'
+import { PeriodComparison } from '../components/period-comparison'
 import { RequestVolumeChart } from '../components/request-volume-chart'
 import { ErrorRateChart } from '../components/error-rate-chart'
 import { ResponseTimeChart } from '../components/response-time-chart'
@@ -19,9 +32,8 @@ import {
   useRequestsPerEndpoint,
 } from '../hooks'
 import { useAnalyticsParams } from '../analytics-params-context'
-import { formatDate } from '@/lib/utils/format'
+import { formatNumber, formatMs, formatPercent, formatDate } from '@/lib/utils/format'
 import { useTimezone } from '@/lib/hooks/use-timezone'
-import { ArrowRight, Activity, AlertTriangle, Zap, Globe, TrendingUp, Users } from 'lucide-react'
 import type { AnalyticsParams } from '../types'
 
 function normalizeParams(params: AnalyticsParams): AnalyticsParams {
@@ -99,14 +111,13 @@ export default function AnalyticsOverviewPage() {
   const timeSeries = useTimeSeries(projectId, timeSeriesParams)
   const endpoints = useRequestsPerEndpoint(projectId, normalizedParams)
 
-  // Calculate comparison params
+  // Comparison params: previous period of equal length immediately before current
   const comparisonParams = useMemo(() => {
     const days = normalizedParams.days ?? 30
     const currentEnd = new Date()
     const currentStart = subDays(currentEnd, days)
     const previousEnd = subDays(currentStart, 1)
     const previousStart = subDays(previousEnd, days)
-
     return {
       current_start: currentStart.toISOString().split('T')[0],
       current_end: currentEnd.toISOString().split('T')[0],
@@ -123,6 +134,13 @@ export default function AnalyticsOverviewPage() {
     return `${formatDate(current_period.start, tz)} - ${formatDate(current_period.end, tz)} vs ${formatDate(previous_period.start, tz)} - ${formatDate(previous_period.end, tz)}`
   }, [comparison.data, tz])
 
+  const summaryData = summary.data?.summary
+  const errorRate = summaryData
+    ? summaryData.total_requests > 0
+      ? (summaryData.error_requests / summaryData.total_requests) * 100
+      : 0
+    : 0
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -131,7 +149,53 @@ export default function AnalyticsOverviewPage() {
         actions={<TimeRangePicker value={params} onChange={setParams} />}
       />
 
-      {/* Comparison Summary Header */}
+      {/* ── 4 Stat Cards ── */}
+      {summary.isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
+        </div>
+      ) : summaryData ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            title="Total Requests"
+            value={formatNumber(summaryData.total_requests)}
+            subtitle={`${formatNumber(summaryData.successful_requests)} successful`}
+            icon={Activity}
+            iconClassName="bg-primary/10 text-primary"
+            accentColor="var(--chart-1)"
+          />
+          <StatCard
+            title="Success Rate"
+            value={formatPercent(summaryData.success_rate)}
+            subtitle={`${formatNumber(summaryData.successful_requests)} successful requests`}
+            icon={CheckCircle}
+            iconClassName="bg-success/10 text-success"
+            accentColor="var(--success)"
+          />
+          <StatCard
+            title="Error Rate"
+            value={formatPercent(errorRate)}
+            subtitle={`${formatNumber(summaryData.error_requests)} failed requests`}
+            icon={AlertTriangle}
+            iconClassName="bg-destructive/10 text-destructive"
+            accentColor="var(--destructive)"
+            invertTrend
+          />
+          <StatCard
+            title="Avg Response"
+            value={formatMs(summaryData.avg_response_time_ms)}
+            subtitle="Average across all requests"
+            icon={Clock}
+            iconClassName="bg-blue-500/10 text-blue-500"
+            accentColor="#3B82F6"
+            invertTrend
+          />
+        </div>
+      ) : null}
+
+      {/* ── Comparison Summary Header ── */}
       <ComparisonSummaryHeader
         requestCount={
           comparison.data
@@ -164,10 +228,50 @@ export default function AnalyticsOverviewPage() {
         isLoading={comparison.isLoading}
       />
 
-      {/* Key Metrics Cards */}
-      <OverviewStats data={summary.data!} isLoading={summary.isLoading} />
+      {/* ── Period Comparison + Charts row ── */}
+      <div className="grid gap-6 lg:grid-cols-3">
+        {/* Period Comparison card (Latency-Profile style) */}
+        <div className="lg:col-span-1">
+          {comparison.data ? (
+            <PeriodComparison
+              data={comparison.data}
+              isLoading={comparison.isLoading}
+              className="h-full"
+            />
+          ) : comparison.isLoading ? (
+            <CardSkeleton className="h-full" />
+          ) : null}
+        </div>
 
-      {/* Quick Links to Detailed Analytics */}
+        {/* Request Volume + Error Rate charts stacked */}
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <div id="chart-requests">
+            <RequestVolumeChart
+              data={timeSeries.data?.data ?? []}
+              isLoading={timeSeries.isLoading}
+              days={normalizedParams.days}
+            />
+          </div>
+          <div id="chart-error-rate">
+            <ErrorRateChart
+              data={timeSeries.data?.data ?? []}
+              isLoading={timeSeries.isLoading}
+              days={normalizedParams.days}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── Latency Trends ── */}
+      <div id="chart-performance">
+        <ResponseTimeChart
+          data={timeSeries.data?.data ?? []}
+          isLoading={timeSeries.isLoading}
+          days={normalizedParams.days}
+        />
+      </div>
+
+      {/* ── Quick Links ── */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base font-semibold">Explore Analytics</CardTitle>
@@ -176,7 +280,7 @@ export default function AnalyticsOverviewPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {QUICK_LINKS.map((link) => (
               <Link
-                key={link.href}
+                key={link.href + link.title}
                 to={`/projects/${project.id}/analytics/${link.href}`}
                 className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition-all hover:border-primary hover:bg-accent hover:shadow-md"
               >
@@ -196,37 +300,7 @@ export default function AnalyticsOverviewPage() {
         </CardContent>
       </Card>
 
-      {/* Mini Charts Section */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Request Volume */}
-        <div id="chart-requests">
-          <RequestVolumeChart
-            data={timeSeries.data?.data ?? []}
-            isLoading={timeSeries.isLoading}
-            days={normalizedParams.days}
-          />
-        </div>
-
-        {/* Error Rate */}
-        <div id="chart-error-rate">
-          <ErrorRateChart
-            data={timeSeries.data?.data ?? []}
-            isLoading={timeSeries.isLoading}
-            days={normalizedParams.days}
-          />
-        </div>
-      </div>
-
-      {/* Performance Chart */}
-      <div id="chart-performance">
-        <ResponseTimeChart
-          data={timeSeries.data?.data ?? []}
-          isLoading={timeSeries.isLoading}
-          days={normalizedParams.days}
-        />
-      </div>
-
-      {/* Status Breakdown & Top Endpoints */}
+      {/* ── Status Breakdown & Top Endpoints ── */}
       <div className="grid gap-6 lg:grid-cols-3">
         <StatusBreakdown
           data={summary.data?.status_breakdown ?? {}}

@@ -43,6 +43,39 @@ const BUCKET_DEFINITIONS = [
   { label: '>2s', max: Infinity, color: 'var(--destructive)', desc: 'Critical' },
 ]
 
+function CustomBarShape(props: any) {
+  const { x, y, width, height, fill, fillOpacity, stroke, strokeWidth } = props
+
+  // Zero-value bar: render a thin 2px baseline indicator line
+  if (!height || height < 1) {
+    const lineWidth = Math.min(width, 50) * 0.8
+    const lineX = x + (width - lineWidth) / 2
+    return (
+      <rect
+        x={lineX}
+        y={y - 2}
+        width={lineWidth}
+        height={2}
+        fill={fill}
+        fillOpacity={0.45}
+        rx={1}
+      />
+    )
+  }
+
+  // Normal bar with rounded top corners only
+  const r = Math.min(4, height / 2, width / 2)
+  return (
+    <path
+      d={`M ${x + r},${y} H ${x + width - r} Q ${x + width},${y} ${x + width},${y + r} V ${y + height} H ${x} V ${y + r} Q ${x},${y} ${x + r},${y} Z`}
+      fill={fill}
+      fillOpacity={fillOpacity ?? 0.8}
+      stroke={stroke}
+      strokeWidth={strokeWidth ?? 1}
+    />
+  )
+}
+
 export function ResponseTimeDistribution({ data, isLoading, className }: ResponseTimeDistributionProps) {
 
   const { buckets } = useMemo(() => {
@@ -73,14 +106,14 @@ export function ResponseTimeDistribution({ data, isLoading, className }: Respons
   }
 
   return (
-    <Card className={cn("overflow-hidden border-none shadow-md ring-1 ring-border", className)}>
+    <Card className={cn("flex flex-col overflow-hidden border-none shadow-md ring-1 ring-border", className)}>
       <CardHeader>
         <CardTitle className="text-base font-semibold">Latency Distribution</CardTitle>
         <CardDescription>
           Request volume by response time bucket
         </CardDescription>
       </CardHeader>
-      <CardContent className="pb-4">
+      <CardContent className="flex flex-1 flex-col items-center justify-center pb-4">
         {data.length === 0 ? (
           <div className="flex h-[300px] w-full items-center justify-center text-sm text-muted-foreground">
             No data available.
@@ -139,7 +172,7 @@ export function ResponseTimeDistribution({ data, isLoading, className }: Respons
                     )
                   }}
                 />
-                <Bar dataKey="count" radius={[4, 4, 0, 0]} maxBarSize={50} animationDuration={1000}>
+                <Bar dataKey="count" shape={<CustomBarShape />} maxBarSize={50} animationDuration={1000}>
                   {buckets.map((bucket, i) => (
                     <Cell 
                       key={i} 
